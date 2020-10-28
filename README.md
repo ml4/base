@@ -50,7 +50,7 @@ else
 fi
 ```
   * Packer will deposit the image in OVA format in this bucket, and then creates the AMI from it using the standard [AWS process](https://docs.aws.amazon.com/vm-import/latest/userguide/vmie_prereqs.html).
-  * Packer will also output a u18.box vbox Vagrant image type if you want to have a look locally prior to running your build. Optional.
+  * Packer will also output a `u18.box` vbox Vagrant image type if you want to have a look locally prior to running your build. Optional.
   * Running the build below means the Ubuntu default user password used will be on your file system only during the build.
   * Next, run these commands to set up your shell and run the Packer build.  These proffer a personalised/differentiated build easily:
 ```
