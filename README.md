@@ -37,7 +37,7 @@ read -p s3_bucket: S3_BUCKET             # AWS s3 bucket for OVA ingress
   * Next:
     * Create the S3 bucket either through the UI/CLI, ensure it is not public.
     * The file `role-policy.json` should be then generated from the `role-policy.src` file as per the below.
-    * Run the following to create the role _vmimport_ in your AWS account and enable the policy for importing via the bucket named in ${S3_BUCKET}:
+    * Run the following to create the role _vmimport_ in your AWS account and enable the policy for importing via the bucket named in `${S3_BUCKET}`:
 ```shell
 if  [ -n "${S3_BUCKET} ]
 then
