@@ -34,9 +34,10 @@ read -p s3_bucket: S3_BUCKET             # AWS s3 bucket for OVA ingress
 ```
 
   * Next, find a Linux machine somewhere and generate yourself a Linux boot password with [grub-mkpasswd-pbkdf2](https://www.gnu.org/software/grub/manual/grub/html_node/Invoking-grub_002dmkpasswd_002dpbkdf2.html) - save for below.
-  * Next, create the S3 bucket:
+  * Next:
+    * Create the S3 bucket either through the UI/CLI, ensure it is not public.
     * The file `role-policy.json` should be then generated from the `role-policy.src` file as per the below.
-    * Run the following to create the role _vmimport_ in your AWS account:
+    * Run the following to create the role _vmimport_ in your AWS account and enable the policy for importing via the bucket named in ${S3_BUCKET}:
 ```shell
 if  [ -n "${S3_BUCKET} ]
 then
@@ -87,7 +88,7 @@ fi
 * Default locale is GB in `preseed.src` and may need editing.
 * I build a root disk with 60Gb - update `preseed.src` if needed.
 * This build is currently designed to operate one-way on a new default distribution of Ubuntu, and is not idempotent due to CIS implementation conveniences.
-* The `preseed.src` file includes `gawk` which supercedes `mawk` as it has `strftime`, and is requried by the `cis.sh` script.
+* The `preseed.src` file includes `gawk` which supercedes `mawk` as it has `strftime`, and is required by the `cis.sh` script.
 * Other notes pertaining to the CIS v2.0.1 Ubuntu CIS benchmarking document:
   * 1.3.1: This config sets up `sSMTP` in order for aide to be able to send email requires a hostname which defaults to `${HOSTNAME}.vm`.
   * 1.5.2: Generate your own grub password as this repo has one only the author knows. See above.
