@@ -1,0 +1,22 @@
+# Cache objects
+packer_cache/
+
+# Crash log
+crash.log
+
+# For built boxes
+*.box
+
+# vagrant tests
+.vagrant
+
+# local
+.DS_Store
+*.zip
+*.pdf
+*.tar.gz
+*.tgz
+cisAssets/*
+base.json
+preseed.cfg
+role-policy.json

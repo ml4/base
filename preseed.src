@@ -1,0 +1,125 @@
+# base preseed
+d-i debian-installer/framebuffer boolean false
+d-i debian-installer/language string en
+d-i debian-installer/country string GB
+d-i debian-installer/locale string en_GB.UTF-8
+d-i console-setup/ask_detect boolean false
+d-i keyboard-configuration/layoutcode string gb
+
+d-i mirror/country string GB
+d-i mirror/http/countries select GB
+d-i mirror/http/hostname string archive.ubuntu.com
+d-i mirror/http/directory string /ubuntu
+d-i mirror/http/proxy string
+d-i mirror/http/mirror select gb.archive.ubuntu.com
+
+d-i base-installer/kernel/override-image string linux-server
+
+d-i clock-setup/utc boolean true
+d-i clock-setup/utc-auto boolean true
+d-i clock-setup/ntp boolean true
+d-i clock-setup/ntp-server string pool.ntp.org
+
+d-i partman-auto/disk string /dev/sda
+d-i partman-auto/method string regular
+d-i partman/confirm boolean true
+d-i partman-auto/expert_recipe string base ::               \
+  47104 48104 100000000 ext4                                \
+    $primary{ }                                             \
+    $bootable{ }                                            \
+    method{ format }                                        \
+    format{ }                                               \
+    use_filesystem{ }                                       \
+    filesystem{ ext4 }                                      \
+    mountpoint{ / }                                         \
+    label{ root }                                           \
+  .                                                         \
+  1060 1 1200 ext4                                          \
+    $primary{ }                                             \
+    method{ format }                                        \
+    format{ }                                               \
+    use_filesystem{ }                                       \
+    filesystem{ ext4 }                                      \
+    mountpoint{ /home }                                     \
+    label{ home }                                           \
+    options/nodev{ nodev }                                  \
+  .                                                         \
+  5120 1 6000 ext4                                          \
+    $primary{ }                                             \
+    method{ format }                                        \
+    format{ }                                               \
+    use_filesystem{ }                                       \
+    filesystem{ ext4 }                                      \
+    mountpoint{ /var }                                      \
+    label{ var }                                            \
+  .                                                         \
+  1060 1 1200 ext4                                          \
+    method{ format }                                        \
+    format{ }                                               \
+    use_filesystem{ }                                       \
+    filesystem{ ext4 }                                      \
+    mountpoint{ /var/tmp }                                  \
+    label{ vartmp }                                         \
+    options/noexec{ noexec }                                \
+    options/nodev{ nodev }                                  \
+    options/nosuid{ nosuid }                                \
+  .                                                         \
+  1060 1 1200 ext4                                          \
+    method{ format }                                        \
+    format{ }                                               \
+    use_filesystem{ }                                       \
+    filesystem{ ext4 }                                      \
+    mountpoint{ /var/log }                                  \
+    label{ varlog }                                         \
+  .                                                         \
+  1060 1 1200 ext4                                          \
+    method{ format }                                        \
+    format{ }                                               \
+    use_filesystem{ }                                       \
+    filesystem{ ext4 }                                      \
+    mountpoint{ /var/log/audit }                            \
+    label{ varlogaudit }                                    \
+  .                                                         \
+  1060 1 1200 ext4                                          \
+    method{ format }                                        \
+    format{ }                                               \
+    use_filesystem{ }                                       \
+    filesystem{ ext4 }                                      \
+    mountpoint{ /tmp }                                      \
+    label{ tmp }                                            \
+    options/loop{ loop }                                    \
+    options/nodev{ nodev }                                  \
+    options/nosuid{ nosuid }                                \
+  .                                                     
+d-i partman-auto/choose_recipe select base
+d-i partman-partitioning/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm_write_new_label boolean true
+d-i partman/confirm_nooverwrite boolean true
+
+tasksel tasksel/first multiselect linux-server
+d-i pkgsel/include string openssh-server curl zip sysvbanner gawk
+d-i pkgsel/install-language-support boolean false
+d-i pkgsel/update-policy select none
+d-i pkgsel/upgrade select full-upgrade
+d-i time/zone string UTC
+
+d-i console-setup/ask_detect boolean false
+d-i keyboard-configuration/layoutcode string us
+d-i keyboard-configuration/modelcode string pc105
+
+# Create ubuntu user account weak password allowed to increase chance of build working - change later if required.
+d-i passwd/user-fullname string ubuntu
+d-i passwd/username string ubuntu
+d-i passwd/user-password password %%UBUNTUPASSWORD%%
+d-i passwd/user-password-again password %%UBUNTUPASSWORD%%
+d-i user-setup/allow-password-weak boolean true
+d-i user-setup/encrypt-home boolean false
+d-i passwd/user-default-groups ubuntu sudo
+## for CIS benchmarking script to work, uids must be > 1000 as all non-root uids 0-1000 will be locked
+d-i passwd/user-uid string 2000
+
+d-i grub-installer/only_debian boolean true
+d-i preseed/late_command string in-target sh -c 'mkdir -p --mode=0700 /home/ubuntu/.ssh && chown ubuntu:ubuntu /home/ubuntu/.ssh'
+d-i debian-installer/splash boolean false
+d-i finish-install/reboot_in_progress note
