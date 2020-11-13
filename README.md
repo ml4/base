@@ -89,6 +89,7 @@ fi
 * I build a root disk with 60Gb - update `preseed.src` if needed.
 * This build is currently designed to operate one-way on a new default distribution of Ubuntu, and is not idempotent due to CIS implementation conveniences.
 * The `preseed.src` file includes `gawk` which supercedes `mawk` as it has `strftime`, and is required by the `cis.sh` script.
+* The default user on board is `ubuntu`, not `vagrant` which means a `vagrant up` will fail the login step and will have to be interrupted. A normal `ssh` will succeed on the command line specifying the correct user.
 * Other notes pertaining to the CIS v2.0.1 Ubuntu CIS benchmarking document:
   * 1.3.1: This config sets up `sSMTP` in order for aide to be able to send email requires a hostname which defaults to `${HOSTNAME}.vm`.
   * 1.5.2: Generate your own grub password as this repo has one only the author knows. See above.
