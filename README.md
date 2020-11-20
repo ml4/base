@@ -40,7 +40,7 @@
 
 ## Notes
 * Once you have your base, differentiate it with equivalent Packer build pipelines to create AMIs for all your favourite toys and stacks and make them trigger when this one succeeds.
-* Bear in mind the %%PHOENIX%% replacement in the Phoenix builds (see below)
+* Bear in mind the `%%PHOENIX%%` replacement in the Phoenix builds (see below)
 * Default locale is GB in `preseed.src` and may need editing.
 * I build a root disk with 60Gb - update `preseed.src` if needed.
 * This build is currently designed to operate one-way on a new default distribution of Ubuntu, and is not idempotent due to CIS implementation conveniences.
@@ -52,7 +52,7 @@
   * 3.4.3: It is recommended to populate the `hosts.deny` once you have an idea of the networking from which you will attach to your machines. Optionally look at [HashiCorp Boundary](https://www.boundaryproject.io/) when you get there.
   * 3.6: For now, I'm leaving network manager switched on to check to see whether or not this is required in order to turn the radio module off.
   * 3.7/4.1.1.4 IPv6 is disabled but firewall rules are included and commented out in case use is required.
-  * 4.1.2.3 auditd.conf has a %%PHOENIX%% parameter added intending for this to be replaced as part of your [phoenix build](https://martinfowler.com/bliki/PhoenixServer.html) which consumes this repo.
+  * 4.1.2.3 auditd.conf has a `%%PHOENIX%%` parameter added intending for this to be replaced as part of your [phoenix build](https://martinfowler.com/bliki/PhoenixServer.html) which consumes this repo.
   * 5.2.14: SSHD is configured to `AllowUsers ubuntu` so only this user will be able to login unless the `cis.sh` script is amended.
 * Note the terms of use for CIS-CAT Lite: https://learn.cisecurity.org/cis-cat-trial-terms
 * Note that this software is provided as-is, and hardens an Ubuntu image built with Packer.  The recommendation is to comply with the above terms of use as they apply in your use case.
