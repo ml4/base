@@ -7,6 +7,7 @@
 ###########################################################################################
 
 set -Eeuo pipefail
+export DEBIAN_FRONTEND=noninteractive
 
 function log {
   bldblk='\e[1;30m' # Black - Bold
@@ -73,13 +74,13 @@ function logRun {
 DATE="$(date +%Y-%m-%d::%H%M%S)"
 log "INFO" "STARTING CIS BENCHMARKING SCRIPT AT ${DATE}"
 
-if [ -z "${EMAIL}" ]
+if [ -z "${GMAIL}" ]
 then
-  handleExit "EMAIL variable unset" "1"
+  handleExit "GMAIL variable unset" "1"
 fi
-if [ -z "${EMAILPASSWORD}" ]
+if [ -z "${GMAILPASSWORD}" ]
 then
-  handleExit "EMAILPASSWORD variable unset" "1"
+  handleExit "GMAILPASSWORD variable unset" "1"
 fi
 if [ -z "${REMOTELOGHOST}" ]
 then
@@ -172,7 +173,7 @@ else
 fi
 
 # CIS benchmarking 1.1.22 Disable Automounting (Scored)
-logRun "1.1.22" "sudo DEBIAN_FRONTEND=noninteractive apt-get purge -y --auto-remove autofs"
+logRun "1.1.22" "sudo apt-get --quiet --assume-yes purge --auto-remove autofs"
 
 # CIS benchmarking 1.2 Configure Software Updates
 # CIS benchmarking 1.2.1 Ensure package manager repositories are configured (Not Scored)
@@ -180,7 +181,7 @@ logRun "1.1.22" "sudo DEBIAN_FRONTEND=noninteractive apt-get purge -y --auto-rem
 
 # CIS benchmarking 1.3 Configure sudo
 # CIS benchmarking 1.3.1 Ensure sudo is installed (Scored)
-logRun "1.3.1" "sudo DEBIAN_FRONTEND=noninteractive apt-get -y install sudo"
+logRun "1.3.1" "sudo apt-get --quiet --assume-yes install sudo"
 
 # CIS benchmarking 1.3.2 Ensure sudo commands use pty (Scored)
 if [[ -z $(grep -Ei '^\s*Defaults\s+([^#]+,\s*)?use_pty(,\s+\S+\s*)*(\s+#.*)?$' /etc/sudoers /etc/sudoers.d/*) ]]
@@ -207,7 +208,7 @@ fi
 # CIS benchmarking 1.4 Filesystem Integrity Checking
 # CIS benchmarking 1.4.1 Ensure AIDE is installed (Scored)
 # first, install and setup sSMTP MTA for aide to supposedly use to alert on hackage: https://rianjs.net/2013/08/send-email-from-linux-server-using-gmail-and-ubuntu-two-factor-authentication
-logRun "1.4.1" "sudo DEBIAN_FRONTEND=noninteractive apt-get -y install ssmtp mailutils"
+logRun "1.4.1" "sudo apt-get --quiet --assume-yes install ssmtp mailutils"
 
 log "INFO" "1.4.1: Uncommenting and adding FromLineOverride=YES to /etc/ssmtp/ssmtp.conf"
 sudo sed -i s/^#FromLineOverride=YES$/FromLineOverride=YES/ /etc/ssmtp/ssmtp.conf
@@ -218,20 +219,20 @@ sudo sed -i s/^mailhub=.*$/mailhub=smtp.gmail.com:587/ /etc/ssmtp/ssmtp.conf
 if [[ -z $(sudo grep '^AuthUser=' /etc/ssmtp/ssmtp.conf) ]]
 then 
   log "INFO" "1.4.1: Appending AuthUser to /etc/ssmtp/ssmtp.conf"
-  echo "AuthUser=${EMAIL}" | sudo tee -a /etc/ssmtp/ssmtp.conf
+  echo "AuthUser=${GMAIL}" | sudo tee -a /etc/ssmtp/ssmtp.conf
 else 
-  log "INFO" "1.4.1: Amending AuthUser=${EMAIL} in /etc/ssmtp/ssmtp.conf"
-  sudo sed -i "s/^AuthUser=.*$/AuthUser=${EMAIL}/" /etc/ssmtp/ssmtp.conf
+  log "INFO" "1.4.1: Amending AuthUser=${GMAIL} in /etc/ssmtp/ssmtp.conf"
+  sudo sed -i "s/^AuthUser=.*$/AuthUser=${GMAIL}/" /etc/ssmtp/ssmtp.conf
 fi
 
 if [[ -z $(sudo grep '^AuthPass=' /etc/ssmtp/ssmtp.conf) ]]
 then 
-  log "INFO" "1.4.1: Appending AuthPass=<EMAILPASSWORD> to /etc/ssmtp/ssmtp.conf"
-  echo "AuthPass=%%EMAILPASSWORD%%" | sudo tee -a /etc/ssmtp/ssmtp.conf
-  sudo sed -i "s/AuthPass=%%EMAILPASSWORD%%/AuthPass=${EMAILPASSWORD}/" /etc/ssmtp/ssmtp.conf
+  log "INFO" "1.4.1: Appending AuthPass=<GMAILPASSWORD> to /etc/ssmtp/ssmtp.conf"
+  echo "AuthPass=%%GMAILPASSWORD%%" | sudo tee -a /etc/ssmtp/ssmtp.conf
+  sudo sed -i "s/AuthPass=%%GMAILPASSWORD%%/AuthPass=${GMAILPASSWORD}/" /etc/ssmtp/ssmtp.conf
 else
   log "INFO" "1.4.1: Amending AuthPass in /etc/ssmtp/ssmtp.conf"
-  sudo sed -i "s/^AuthPass=.*$/AuthPass=${EMAILPASSWORD}/" /etc/ssmtp/ssmtp.conf
+  sudo sed -i "s/^AuthPass=.*$/AuthPass=${GMAILPASSWORD}/" /etc/ssmtp/ssmtp.conf
 fi
 
 if [[ -z $(sudo grep '^UseSTARTTLS=' /etc/ssmtp/ssmtp.conf) ]]
@@ -242,11 +243,11 @@ else
   log "INFO" "1.4.1: Amending UseSTARTTLS in /etc/ssmtp/ssmtp.conf"
   sudo sed -i 's/^UseSTARTTLS=.*$/UseSTARTTLS=YES/' /etc/ssmtp/ssmtp.conf
 fi
-log "INFO" "1.4.1: Emailing ${EMAIL} with update to system build process"
+log "INFO" "1.4.1: Emailing ${GMAIL} with update to system build process"
 log "WARN" "1.4.1: If this fails, check the email password first!"
-echo "$(date +%Y-%m-%d::%H:%M): Email alerts will come to this address" | sudo mail -s "`hostname -f`: sSMTP MTA is up" ${EMAIL}
+echo "$(date +%Y-%m-%d::%H:%M): Email alerts will come to this address" | sudo mail -s "`hostname -f`: sSMTP MTA is up" ${GMAIL}
 
-logRun "1.4.1" "sudo DEBIAN_FRONTEND=noninteractive apt-get -y install aide"
+logRun "1.4.1" "sudo apt-get --quiet --assume-yes install aide"
 logRun "1.4.1" "sudo aideinit -y -f --"
 logRun "1.4.1" "sudo cp -a /var/lib/aide/aide.db /var/lib/aide/aide.db.`hostname`"
 logRun "1.4.1" "sudo gzip -f /var/lib/aide/aide.db.`hostname`"
@@ -301,7 +302,7 @@ fi
 # no need to do sysctl -w now as done later
 
 # CIS benchmarking 1.6.3 Ensure prelink is disabled (Scored)
-logRun "1.6.3" "sudo DEBIAN_FRONTEND=noninteractive apt-get -y purge prelink"
+logRun "1.6.3" "sudo apt-get --quiet --assume-yes purge prelink"
 
 # CIS benchmarking 1.6.4 Ensure core dumps are restricted (Scored)
 log "INFO" "1.6.4: Running echo '* hard core 0' | sudo tee -a /etc/security/limits.conf"
@@ -316,7 +317,7 @@ echo '@reboot root sysctl -p' | sudo tee -a /etc/crontab
 # CIS benchmarking 1.7 Mandatory Access Control
 # CIS benchmarking 1.7.1 Configure AppArmor 
 # CIS benchmarking 1.7.1.1 Ensure AppArmor is installed (Scored)
-logRun "1.7.1.1" "sudo DEBIAN_FRONTEND=noninteractive apt-get -y install apparmor apparmor-utils"
+logRun "1.7.1.1" "sudo apt-get --quiet --assume-yes install apparmor apparmor-utils"
 
 # CIS benchmarking 1.7.1.2 Ensure AppArmor is enabled in bootloader configuration (Scored)
 if [[ -n $(sudo grep "^\s*linux" /boot/grub/grub.cfg | grep -v "apparmor=1" | grep -v '/boot/memtest86+.bin') ]]
@@ -400,12 +401,12 @@ echo "##########################################################################
 # CIS benchmarking 2.1 inetd Services
 # CIS benchmarking 2.1.1 Ensure xinetd is not installed (Scored) 
 # CIS benchmarking 2.1.2 Ensure openbsd-inetd is not installed (Scored)
-logRun "2.1.1-2.1.2" "sudo DEBIAN_FRONTEND=noninteractive apt-get purge -y --auto-remove xinetd openbsd-inetd"
+logRun "2.1.1-2.1.2" "sudo apt-get --quiet --assume-yes purge --auto-remove xinetd openbsd-inetd"
 
 # CIS benchmarking 2.2 Special Purpose Services
 # CIS benchmarking 2.2.1 Time Synchronization
 # CIS benchmarking 2.2.1.1 Ensure time synchronization is in use (Scored)
-logRun "2.2.1.1" "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ntp"
+logRun "2.2.1.1" "sudo apt-get --quiet --assume-yes install ntp"
 
 # CIS benchmarking 2.2.1.2 Ensure systemd-timesyncd is configured (Not Scored)
 # CIS benchmarking 2.2.1.3 Ensure chrony is configured (Scored) - not needed as NTP is used below
@@ -465,8 +466,8 @@ logRun "2.2.1.4" "sudo systemctl restart ntp"
 # CIS benchmarking 2.2.15 Ensure mail transfer agent is configured for local-only mode (Scored) - removed/replaced with sSMTP 
 # CIS benchmarking 2.2.16 Ensure rsync service is not enabled (Scored)
 # CIS benchmarking 2.2.17 Ensure NIS Server is not enabled (Scored)
-logRun "2.2.2-2.2.17" "sudo DEBIAN_FRONTEND=noninteractive apt-get purge -y --auto-remove xserver-xorg*"
-logRun "2.2.2-2.2.17" "sudo DEBIAN_FRONTEND=noninteractive apt-get purge -y --auto-remove avahi-daemon cups dhcp3-server isc-dhcp-server slapd nfs-kernel-server nfs-common rpcbind bind9 vsftpd apache2 dovecot exim cyrus-imapd samba samba-common squid snmpd postfix rsync nis"
+logRun "2.2.2-2.2.17" "sudo apt-get --quiet --assume-yes purge --auto-remove xserver-xorg*"
+logRun "2.2.2-2.2.17" "sudo apt-get --quiet --assume-yes purge --auto-remove avahi-daemon cups dhcp3-server isc-dhcp-server slapd nfs-kernel-server nfs-common rpcbind bind9 vsftpd apache2 dovecot exim cyrus-imapd samba samba-common squid snmpd postfix rsync nis"
 
 # CIS benchmarking 2.3 Service Clients
 # CIS benchmarking 2.3.1 Ensure NIS Client is not installed (Scored) - already done in 2.2.17 above
@@ -474,7 +475,7 @@ logRun "2.2.2-2.2.17" "sudo DEBIAN_FRONTEND=noninteractive apt-get purge -y --au
 # CIS benchmarking 2.3.3 Ensure talk client is not installed (Scored)
 # CIS benchmarking 2.3.4 Ensure telnet client is not installed (Scored)
 # CIS benchmarking 2.3.5 Ensure LDAP client is not installed (Scored)
-logRun "2.3" "sudo DEBIAN_FRONTEND=noninteractive apt-get purge -y --auto-remove rsh-client rsh-redone-client talk telnet ldap-utils"
+logRun "2.3" "sudo apt-get --quiet --assume-yes purge --auto-remove rsh-client rsh-redone-client talk telnet ldap-utils"
 #
 ## all done
 
@@ -552,7 +553,7 @@ echo "@reboot sleep 60; sudo /sbin/sysctl -p" | sudo crontab -
 
 # CIS benchmarking 3.3 TCP Wrappers
 # CIS benchmarking 3.3.1 Ensure TCP Wrappers is installed (Not Scored)
-logRun "3.3.1" "sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tcpd"
+logRun "3.3.1" "sudo apt-get --quiet --assume-yes install tcpd"
 
 # CIS benchmarking 3.3.2 Ensure /etc/hosts.allow is configured (Scored) - We cannot know ahead of time which cloud subnet this host will be part of
 logRun "3.3.2" "test -f /etc/hosts.allow"
@@ -590,7 +591,7 @@ done
 # CIS benchmarking 3.5.1 Ensure Firewall software is installed
 # CIS benchmarking 3.5.1.1 Ensure a Firewall package is installed (Scored)
 log "INFO" "3.5.1: Installing iptables"
-logRun "3.5.1" "sudo DEBIAN_FRONTEND=noninteractive apt-get -y install iptables"
+logRun "3.5.1" "sudo apt-get --quiet --assume-yes install iptables"
 
 # CIS benchmarking 3.5.2 Configure UncomplicatedFirewall
 # CIS benchmarking 3.5.2.1 Ensure ufw service is enabled (Scored)
@@ -673,10 +674,10 @@ logRun "3.5.4.1.4" "sudo iptables -A INPUT -p tcp --dport 22 -m state --state NE
 # logRun "sudo ip6tables -A INPUT -p tcp --dport 22 -m state --state NEW -j ACCEPT"
 
 # CIS benchmarking 3.6 Ensure wireless interfaces are disabled (Scored)
-logRun "3.6" "sudo DEBIAN_FRONTEND=noninteractive apt-get -y install network-manager"
+logRun "3.6" "sudo apt-get --quiet --assume-yes install network-manager"
 logRun "3.6" "sudo /etc/init.d/network-manager start"
 logRun "3.6" "sudo nmcli radio all off"
-# logRun "3.6" "sudo DEBIAN_FRONTEND=noninteractive apt-get -y purge network-manager"
+# logRun "3.6" "sudo apt-get --quiet --assume-yes purge network-manager"
 
 # CIS benchmarking 3.7 Disable IPv6 (Not Scored) - See 4.1.1.4 below for disablement
 #
@@ -703,7 +704,7 @@ echo "##########################################################################
 # CIS benchmarking 4.1 Configure System Accounting (auditd)
 # CIS benchmarking 4.1.1 Ensure auditing is enabled 
 # CIS benchmarking 4.1.1.1 Ensure auditd is installed (Scored)
-logRun "4.1.1.1" "sudo DEBIAN_FRONTEND=noninteractive apt-get -y install auditd audispd-plugins"
+logRun "4.1.1.1" "sudo apt-get --quiet --assume-yes install auditd audispd-plugins"
 
 # CIS benchmarking 4.1.1.2 Ensure auditd service is enabled (Scored)
 logRun "4.1.1.2" "sudo systemctl --now enable auditd"
@@ -729,7 +730,7 @@ fi
 cat << EOF | sudo tee /etc/audit/auditd.conf
 # Configure auditd
 # NOTE: non-yorn values in lower case are non-defaults added by the build
-action_mail_acct = ${EMAIL}
+action_mail_acct = ${GMAIL}
 admin_space_left = 50
 admin_space_left_action = halt
 disk_error_action = syslog
@@ -914,13 +915,13 @@ cat << 'EOF' | sudo tee -a /etc/audit/rules.d/audit.rules
 EOF
 
 # Now reload the audit system
-logRun "4.1.17" "sudo DEBIAN_FRONTEND=noninteractive apt-get -y install policykit-1"
+logRun "4.1.17" "sudo apt-get --quiet --assume-yes install policykit-1"
 logRun "4.1.17" "sudo systemctl reload auditd"
 
 # CIS benchmarking 4.2 Configure Logging
 # CIS benchmarking 4.2.1 Configure rsyslog
 # CIS benchmarking 4.2.1.1 Ensure rsyslog is installed (Scored)
-logRun "4.2.1.1" "sudo DEBIAN_FRONTEND=noninteractive apt-get -y install rsyslog"
+logRun "4.2.1.1" "sudo apt-get --quiet --assume-yes install rsyslog"
 
 # CIS benchmarking 4.2.1.2 Ensure rsyslog Service is enabled (Scored)
 logRun "4.2.1.2" "sudo systemctl --now enable rsyslog"
@@ -1115,7 +1116,7 @@ fi
 # CIS benchmarking 5.3 Configure PAM
 # CIS benchmarking 5.3.1 Ensure password creation requirements are configured (Scored)
 # Settings in /etc/security/pwquality.conf must use spaces around the = symbol
-logRun "5.3.1" "sudo DEBIAN_FRONTEND=noninteractive apt-get -y install libpam-pwquality"
+logRun "5.3.1" "sudo apt-get --quiet --assume-yes install libpam-pwquality"
 if [[ $(grep -e "^password.*requisite.*pam_pwquality.so.*retry=" /etc/pam.d/common-password) ]]
 then
   log "INFO" "5.3.1: Setting /etc/pam.d/common-password retry=3"
@@ -1727,7 +1728,7 @@ fi
 ## NOTE further update to the grub.cfg perms required as update-grub undoes the work.  See the end.
 logRun "1.5.1" "sudo chown root:root /boot/grub/grub.cfg"
 logRun "1.5.1" "sudo chmod og-rwx /boot/grub/grub.cfg"
-# logRun "3.6" "sudo DEBIAN_FRONTEND=noninteractive apt-get -y remove network-manager"
+# logRun "3.6" "sudo apt-get --quiet --assume-yes remove network-manager"
 
 ## jah brendan 
 #

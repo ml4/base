@@ -7,6 +7,7 @@
 ###########################################################################################
 
 set -Eeuo pipefail
+export DEBIAN_FRONTEND=noninteractive
 
 function log {
   bldblk='\e[1;30m' # Black - Bold
@@ -69,9 +70,9 @@ function checkOrRun {
 
 ## init
 #
-if [ -z "${EMAIL}" ]
+if [ -z "${GMAIL}" ]
 then
-  log "ERROR" "EMAIL variable is unset"
+  log "ERROR" "GMAIL variable is unset"
   exit 1
 fi
 
@@ -83,9 +84,9 @@ echo "##########################################################################
 # Apt cleanup.
 ## Remove other packages not covered by CIS benchmarking.
 #
-checkOrRun "sudo DEBIAN_FRONTEND=noninteractive apt-get purge -y --auto-remove nano ntfs-3g"
-checkOrRun "sudo apt-get -y autoremove"
-checkOrRun "sudo apt-get update"
+checkOrRun "sudo apt-get --quiet --assume-yes purge --auto-remove nano ntfs-3g"
+checkOrRun "sudo apt-get --quiet --assume-yes autoremove"
+checkOrRun "sudo apt-get --quiet --assume-yes update"
 
 ## additional kernel tuning
 log "INFO" "RUNNING additional kernel tweaks"

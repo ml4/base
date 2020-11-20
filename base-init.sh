@@ -7,6 +7,7 @@
 ###########################################################################################
 
 set -Eeuo pipefail
+export DEBIAN_FRONTEND=noninteractive
 
 function log {
   bldblk='\e[1;30m' # Black - Bold
@@ -77,8 +78,8 @@ echo 'APT::Periodic::Enable "0";' | tee -a /etc/apt/apt.conf.d/10periodic
 
 ## handle initial updates from origin
 #
-checkOrRun "sudo DEBIAN_FRONTEND=noninteractive apt-get update"
-checkOrRun "sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y"
+checkOrRun "sudo apt-get --quiet --assume-yes update"
+checkOrRun "sudo apt-get --quiet --assume-yes upgrade"
 
 ## deposit phoenix file which can be edited by phoenix build to enable contextual relevance in the auditd
 #
@@ -118,7 +119,7 @@ cat << 'EOF' | sudo tee -a /usr/local/bin/base-boot.sh
 ## boot notice
 #
 ME=$(hostname -f)
-echo " " | mail -s "${ME} just booted" ${EMAIL}
+echo " " | mail -s "${ME} just booted" ${GMAIL}
 
 ## ensure /var/logs are only readable by root
 #
