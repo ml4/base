@@ -30,7 +30,7 @@
 ## Setup
 * Use a Linux machine somewhere and generate yourself a Linux boot password with [grub-mkpasswd-pbkdf2](https://www.gnu.org/software/grub/manual/grub/html_node/Invoking-grub_002dmkpasswd_002dpbkdf2.html) - save this for later.
 * Running the build below means the Ubuntu default user password used will be on your file system only during the build.
-* The `init.sh` script in this repo is triggered by the `setup.sh` and configures IAM in your account so that the build process works - Check [this](https://rzn.id.au/tech/converting-an-ova-to-an-amazon-ami/) post.
+* The `init.sh` script in this repo is triggered by the `setup.sh` and configures IAM in your account so that the build process works - Check [this](https://rzn.id.au/tech/converting-an-ova-to-an-amazon-ami/) post, credence to Jake.
 * To run the build, run this and instantiate your variables.  This:
 ```shell
 . setup.sh
