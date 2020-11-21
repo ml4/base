@@ -27,6 +27,7 @@
 * Permissions to create EC2 instances, volumes, S3 buckets, s3 objects, user roles, role policies.
 * A _privately_ accessible AWS S3 bucket.  Packer will deposit the image in OVA format in this bucket, and then create the AMI from it using the standard [AWS process](https://docs.aws.amazon.com/vm-import/latest/userguide/vmie_prereqs.html) leaving the bucket empty.
 * A separate Ubuntu machine for Grub password generation.
+* Gmail account for system sSMTP configuration - the box will email this account during the build.
 
 ## Setup
 * Use a Linux machine somewhere and generate yourself a Linux boot password with [grub-mkpasswd-pbkdf2](https://www.gnu.org/software/grub/manual/grub/html_node/Invoking-grub_002dmkpasswd_002dpbkdf2.html) - save this for later.
