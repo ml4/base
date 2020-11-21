@@ -35,7 +35,7 @@ then
                -var=remoteLogHost=${HOST}.${DOMAIN} -var=hostname=${HOST} \
                -var=domain=${DOMAIN} -var=aws_access_key_id=${AWS_ACCESS_KEY_ID} \
                -var=aws_secret_access_key=${AWS_SECRET_ACCESS_KEY} \
-               -var=s3_bucket=${S3_BUCKET} -var=region=${REGION} -var=ubuntu_password=${UBUNTUPASSWORD} base.json && rm preseed.cfg role-policy.json
+               -var=s3_bucket=${S3_BUCKET} -var=region=${REGION} -var=ubuntu_password=${UBUNTUPASSWORD} base.json && rm preseed.cfg role-policy.json 2>/dev/null
 else
   echo "Error: Please ensure all required environment variables are set."
 fi
