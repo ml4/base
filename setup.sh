@@ -12,10 +12,10 @@ then
   export GMAIL=${GMAIL}
 fi
 
-if [ -z $(echo ${HOSTNAME}) ]
+if [ -z $(echo ${HOST}) ]
 then
-  read -p "Enter value for HOSTNAME: " HOSTNAME
-  export HOSTNAME=${HOSTNAME}
+  read -p "Enter value for HOST: " HOST
+  export HOST=${HOST}
 fi
 
 if [ -z $(echo ${DOMAIN}) ]

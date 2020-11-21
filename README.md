@@ -47,7 +47,7 @@
 * The `preseed.src` file includes `gawk` which supercedes `mawk` as it has `strftime`, and is required by the `cis.sh` script.
 * The default user on board is `ubuntu`, not `vagrant` which means a `vagrant up` will fail the login step and will have to be interrupted. A normal `ssh` will succeed on the command line specifying the correct user.
 * Other notes pertaining to the CIS v2.0.1 Ubuntu CIS benchmarking document:
-  * 1.3.1: This config sets up `sSMTP` in order for `aide` to be able to send email requires a hostname which defaults to `${HOSTNAME}.vm` and a _gmail account_.
+  * 1.3.1: This config sets up `sSMTP` in order for `aide` to be able to send email requires a hostname which defaults to `${HOST}.vm` and a _gmail account_.
   * 1.5.2: Generate your own grub password as this repo has one only the author knows. See above.
   * 3.4.3: It is recommended to populate the `hosts.deny` once you have an idea of the networking from which you will attach to your machines. Optionally look at [HashiCorp Boundary](https://www.boundaryproject.io/) when you get there.
   * 3.6: For now, I'm leaving network manager switched on to check to see whether or not this is required in order to turn the radio module off.
@@ -59,7 +59,7 @@
 * Note that this software is provided as-is, and hardens an Ubuntu image built with Packer.  The recommendation is to comply with the above terms of use as they apply in your use case.
 * Running
 ```shell
-echo -e "GRUB_PASSWORD: ${GRUB_PASSWORD}\nGMAIL: $GMAIL\nHOSTNAME: $HOSTNAME\nDOMAIN: $DOMAIN\nREGION: $REGION\nREMOTELOGHOST: $REMOTELOGHOST\nS3_BUCKET: ${S3_BUCKET}\nAWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID\nAWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY\nGMAILPASSWORD: $GMAILPASSWORD\nUBUNTUPASSWORD: $UBUNTUPASSWORD\n"
+echo -e "GRUB_PASSWORD: ${GRUB_PASSWORD}\nGMAIL: $GMAIL\nHOST: $HOST\nDOMAIN: $DOMAIN\nREGION: $REGION\nREMOTELOGHOST: $REMOTELOGHOST\nS3_BUCKET: ${S3_BUCKET}\nAWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID\nAWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY\nGMAILPASSWORD: $GMAILPASSWORD\nUBUNTUPASSWORD: $UBUNTUPASSWORD\n"
 ```
 might be convenient during development.
 
