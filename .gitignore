@@ -17,7 +17,6 @@ crash.log
 *.tar.gz
 *.tgz
 cisAssets/*
-base.json
 preseed.cfg
 role-policy.json
 
