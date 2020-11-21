@@ -8,7 +8,7 @@ fi
 
 if  [ -n "${S3_BUCKET}" ]
 then
-  aws s3api list-buckets --query "Buckets[].Name" | tr '\t' '\012' | grep ^${S3_BUCKET}$
+  aws s3 ls | awk '{print $NF}' | grep ^${S3_BUCKET}$
   rCode=${?}
   if [ ${rCode} -gt 0 ]
   then
