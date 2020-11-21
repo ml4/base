@@ -57,6 +57,11 @@
 * Packer will also output a `u18.box` vbox Vagrant image type if you want to have a look locally prior to running your build. Optional.
 * Note the terms of use for CIS-CAT Lite: https://learn.cisecurity.org/cis-cat-trial-terms
 * Note that this software is provided as-is, and hardens an Ubuntu image built with Packer.  The recommendation is to comply with the above terms of use as they apply in your use case.
+* Running
+```shell
+echo -e "GRUB_PASSWORD: ${GRUB_PASSWORD}\nREGION: $REGION\nREMOTELOGHOST: $REMOTELOGHOST\nEMAIL: $EMAIL\nEMAILPASSWORD: $EMAILPASSWORD \nHOSTNAME: $HOSTNAME\nDOMAIN: $DOMAIN\nAWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID\nAWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY\nS3_BUCKET: $S3_BUCKET\nUBUNTUPASSWORD: $UBUNTUPASSWORD\n"
+```
+might be convenient during development.
 
 ## TODO
 * Rerun with REMOTELOGHOST instantiated and test logging works with Elastic cloud.
