@@ -25,15 +25,13 @@
 * An AWS account, with locally configured credentials (by which I mean AWS AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY).
 * A working [AWS cli tool](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-mac.html).
 * Permissions to create EC2 instances, volumes, S3 buckets, s3 objects, user roles, role policies.
+* A _privately_ accessible AWS S3 bucket.  Packer will deposit the image in OVA format in this bucket, and then create the AMI from it using the standard [AWS process](https://docs.aws.amazon.com/vm-import/latest/userguide/vmie_prereqs.html) leaving the bucket empty.
 
 ## Setup
-* The first thing to do is to configure the AWS S3 bucket.  Check [this](https://rzn.id.au/tech/converting-an-ova-to-an-amazon-ami/) post.
-* Next, find a Linux machine somewhere and generate yourself a Linux boot password with [grub-mkpasswd-pbkdf2](https://www.gnu.org/software/grub/manual/grub/html_node/Invoking-grub_002dmkpasswd_002dpbkdf2.html) - save for below.
-* Create the S3 bucket either through the UI/CLI, ensure it is _not_ public.
-* Packer will deposit the image in OVA format in this bucket, and then create the AMI from it using the standard [AWS process](https://docs.aws.amazon.com/vm-import/latest/userguide/vmie_prereqs.html).
-* Packer will also output a `u18.box` vbox Vagrant image type if you want to have a look locally prior to running your build. Optional.
+* Use a Linux machine somewhere and generate yourself a Linux boot password with [grub-mkpasswd-pbkdf2](https://www.gnu.org/software/grub/manual/grub/html_node/Invoking-grub_002dmkpasswd_002dpbkdf2.html) - save this for later.
 * Running the build below means the Ubuntu default user password used will be on your file system only during the build.
-* To run the build, run this and instantiate your variables:
+* The `init.sh` script in this repo is triggered by the `setup.sh` and configures IAM in your account so that the build process works - Check [this](https://rzn.id.au/tech/converting-an-ova-to-an-amazon-ami/) post.
+* To run the build, run this and instantiate your variables.  This:
 ```shell
 . setup.sh
 ```
@@ -54,6 +52,7 @@
   * 3.7/4.1.1.4 IPv6 is disabled but firewall rules are included and commented out in case use is required.
   * 4.1.2.3 auditd.conf has a `%%PHOENIX%%` parameter added intending for this to be replaced as part of your [phoenix build](https://martinfowler.com/bliki/PhoenixServer.html) which consumes this repo.
   * 5.2.14: SSHD is configured to `AllowUsers ubuntu` so only this user will be able to login unless the `cis.sh` script is amended.
+* Packer will also output a `u18.box` vbox Vagrant image type if you want to have a look locally prior to running your build. Optional.
 * Note the terms of use for CIS-CAT Lite: https://learn.cisecurity.org/cis-cat-trial-terms
 * Note that this software is provided as-is, and hardens an Ubuntu image built with Packer.  The recommendation is to comply with the above terms of use as they apply in your use case.
 
