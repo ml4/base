@@ -19,4 +19,4 @@ crash.log
 cisAssets/*
 preseed.cfg
 role-policy.json
-
+*/*.tfstate*

@@ -17,6 +17,7 @@
 * CIS benchmark compliance.
 * Free to create and free to analyse/confirm compliance.
 * Scored Level 1 CIS benchmarks, not unscored or Level 2 requirements.
+* GCP/Azure builds to follow in due course, but `!breath(hold)`.
 
 ## Current Picture
 * Parameterised Vagrant, Packer & Bash.  That's it.

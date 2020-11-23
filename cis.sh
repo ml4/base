@@ -1,4 +1,4 @@
-2.#!/bin/bash
+#!/bin/bash
 #
 ## cis.sh: Apply CIS v2.0.1 Ubuntu 18.04 benchmarking.
 ## (c) 2020:10:28::ml4
