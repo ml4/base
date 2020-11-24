@@ -57,7 +57,7 @@ fi
 
 if [ -f preseed.cfg ]
 then
-  echo "preeed.cfg still present so Packer build must have failed."
+  echo "preseed.cfg still present so Packer build must have failed."
   exit 1
 fi
 
@@ -109,6 +109,19 @@ if [ ${rCode} -gt 0 ]
 then
   echo "ERROR running terraform destroy"
   exit 1
+fi
+
+## remove all older AMIs *and their corresponding snapshots* leaving only the latest behind. Do nothing if only one exists
+#
+IMAGENUM=$(aws ec2 describe-images --owners self --region ${REGION} --query "sort_by(Images, &CreationDate)" --filters "Name=name,Values=base" --output json | grep ImageId | wc -l | awk '{print $1}')
+if [[ ${IMAGENUM} > 1 ]]
+then
+  for AMI in $(aws ec2 describe-images --owners self --region ${REGION} --query "sort_by(Images, &CreationDate)" --filters "Name=name,Values=base" --output json | grep ImageId | head -$(( IMAGENUM -= 1 )) | awk -F '"' '{print $4}')
+  do
+    SNAP=$(aws ec2 describe-snapshots --owner-ids self --region eu-west-1 --output text | grep ${AMI} | awk -F'\t' '{print $6}')
+    echo "aws ec2 deregister-image --image-id ${AMI} --region ${REGION} && aws ec2 delete-snapshot --snapshot-id ${SNAP} --region ${REGION}"
+    aws ec2 deregister-image --image-id ${AMI} --region ${REGION} && aws ec2 delete-snapshot --snapshot-id ${SNAP} --region ${REGION}
+  done
 fi
 
 ## tidy up, leave packer_cache

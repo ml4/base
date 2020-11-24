@@ -38,6 +38,7 @@
 ```shell
 . setup.sh
 ```
+* The `run.sh` will list all AMIs with a tag Name = `base` and delete all but the latest and their corresponding snapshots.  Read the code.
 
 ## Notes
 * Running the build below means the Ubuntu default user password used will be on your file system only during the build.
