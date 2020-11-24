@@ -20,9 +20,10 @@
 * GCP/Azure builds to follow in due course, but `!breath(hold)`.
 
 ## Current Picture
-* Parameterised Vagrant, Packer & Bash.  That's it.
+* Parameterised Packer & Bash, with a little bit of Terraform & Vagrant.  That's it.
 
 ## Prerequisites
+* Packer and Terraform.
 * An AWS account, with locally configured credentials (by which I mean AWS AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY).
 * A working [AWS cli tool](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-mac.html).
 * Permissions to create EC2 instances, volumes, S3 buckets, s3 objects, user roles, role policies.
