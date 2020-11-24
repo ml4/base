@@ -1,1 +1,2 @@
 * Make the ubuntu user inaccessible using password - key only
+* Remove man pages from base image
