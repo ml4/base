@@ -68,18 +68,15 @@ function checkOrRun {
   ${cmd}
 }
 
-## init
-#
-if [ -z "${GMAIL}" ]
-then
-  log "ERROR" "GMAIL variable is unset"
-  exit 1
-fi
-
 echo "##################################################################################################"
 echo
 banner "BASE CLEAN"
 echo "##################################################################################################"
+
+## Add cloud-init ready for cloud building
+#
+checkOrRun "sudo apt-get --quiet --assume-yes install cloud-init"
+checkOrRun "sudo cloud-init init"
 
 # Apt cleanup.
 ## Remove other packages not covered by CIS benchmarking.

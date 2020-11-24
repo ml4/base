@@ -63,4 +63,4 @@ then
   echo
 fi
 
-./init.sh
+./run.sh

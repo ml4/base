@@ -33,7 +33,7 @@
 ## Setup
 * Use a Linux machine somewhere and generate yourself a Linux boot password with [grub-mkpasswd-pbkdf2](https://www.gnu.org/software/grub/manual/grub/html_node/Invoking-grub_002dmkpasswd_002dpbkdf2.html) - save this for later.
 * The `init.sh` script in this repo is triggered by the `setup.sh` and configures IAM in your account so that the build process works - Check [this](https://rzn.id.au/tech/converting-an-ova-to-an-amazon-ami/) post, credence to Jake.
-* Run the build:
+* Run the build. This will ask for any outstanding variable values in order for it to trigger the run.sh which itself runs the Packer build and nominal Terraform unit test:
 ```shell
 . setup.sh
 ```
@@ -63,6 +63,7 @@
 echo -e "GRUB_PASSWORD: ${GRUB_PASSWORD}\nGMAIL: $GMAIL\nHOST: $HOST\nDOMAIN: $DOMAIN\nREGION: $REGION\nREMOTELOGHOST: $REMOTELOGHOST\nS3_BUCKET: ${S3_BUCKET}\nAWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID\nAWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY\nGMAILPASSWORD: $GMAILPASSWORD\nUBUNTUPASSWORD: $UBUNTUPASSWORD\n"
 ```
 might be convenient during development.
+* Put your site-specific base image unit test content in the `base_unit_test.sh` script which distributes as a nominal Internet connectivity test.
 
 ## TODO
 * Rerun with REMOTELOGHOST instantiated and test logging works with Elastic cloud.

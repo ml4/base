@@ -1,0 +1,37 @@
+## base image unit test
+## simple test to start and run rudimentary OS tests to assure working image build
+## as a result, this small TF unit suffices atm
+#
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3"
+    }
+  }
+  required_version = ">= 0.13"
+}
+
+provider "aws" {
+  region = "%%REGION%%"
+}
+
+resource "aws_key_pair" "base_unit_test_key" {
+	key_name = "base_unit_test_key"
+	public_key = file("./base_unit_test_key.pub")
+}
+
+resource "aws_instance" "base_unit_test" {
+  ami           = "%%LATESTBASE%%"
+  instance_type = "t2.micro"
+  key_name      = "base_unit_test_key"
+  user_data     = file("base_unit_test.sh")
+
+  tags = {
+    Name = "base_unit_test"
+  }
+}
+
+output "base_unit_test_instance_id" {
+  value = aws_instance.base_unit_test.id
+}

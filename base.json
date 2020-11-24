@@ -60,6 +60,9 @@
   ],
   "provisioners": [
     {
+      "environment_vars": [
+        "GMAIL={{user `email`}}"
+      ],
       "execute_command": "echo '{{user `ubuntu_password`}}' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
       "script": "base-init.sh",
       "type": "shell"

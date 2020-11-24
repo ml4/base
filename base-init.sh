@@ -119,12 +119,13 @@ cat << 'EOF' | sudo tee -a /usr/local/bin/base-boot.sh
 ## boot notice
 #
 ME=$(hostname -f)
-echo " " | mail -s "${ME} just booted" ${GMAIL}
+echo " " | mail -s "${ME} just booted" %%GMAIL%%
 
 ## ensure /var/logs are only readable by root
 #
 sudo find /var/log -type f -exec sudo chmod g-wx,o-rwx "{}" + -o -type d -exec sudo chmod g-w,o-rwx "{}" +
 EOF
+sudo sed -i "s/%%GMAIL%%/${GMAIL}/" /usr/local/bin/base-boot.sh
 checkOrRun "sudo chown root:root /usr/local/bin/base-boot.sh"
 checkOrRun "sudo chmod 744 /usr/local/bin/base-boot.sh"
 checkOrRun "sudo systemctl enable base-boot"
