@@ -1,9 +1,10 @@
-## This script automates the set up of the packer build environment to ensure all env vars are instantiated
+## This script automates the initiation of the packer build environment to ensure all env vars are instantiated
 #
 if [ -z $(echo ${GRUB_PASSWORD}) ]
 then
-  read -p "Enter value for GRUB_PASSWORD: " GRUB_PASSWORD
+  read -sp "Enter value for GRUB_PASSWORD: " GRUB_PASSWORD
   export GRUB_PASSWORD=${GRUB_PASSWORD}
+  echo
 fi
 
 if [ -z $(echo ${GMAIL}) ]
@@ -47,6 +48,12 @@ then
   read -sp "Enter value for AWS_SECRET_ACCESS_KEY: " AWS_SECRET_ACCESS_KEY
   export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
   echo
+fi
+
+if [ -z $(echo ${AWS_SESSION_TOKEN}) ]
+then
+  read -p "Enter value for AWS_SESSION_TOKEN (enter for none): " AWS_SESSION_TOKEN
+  export AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
 fi
 
 if [ -z $(echo ${GMAILPASSWORD}) ]

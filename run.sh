@@ -50,6 +50,7 @@ then
                -var=remoteLogHost=${HOST}.${DOMAIN} -var=hostname=${HOST} \
                -var=domain=${DOMAIN} -var=aws_access_key_id=${AWS_ACCESS_KEY_ID} \
                -var=aws_secret_access_key=${AWS_SECRET_ACCESS_KEY} \
+               -var=aws_session_token=${AWS_SESSION_TOKEN} \
                -var=s3_bucket=${S3_BUCKET} -var=region=${REGION} -var=ubuntu_password=${UBUNTUPASSWORD} base.json && rm preseed.cfg role-policy.json 2>/dev/null
 else
   echo "Error: Please ensure all required environment variables are set."
@@ -89,18 +90,31 @@ fi
 ## aws ec2 wait instance-status-ok --instance-ids appears to timeout
 #
 echo -n "Waiting for instance."
-INSTANCEID=$(terraform output | grep base_unit_test_instance_id | awk '{print $NF}')
+INSTANCEID=$(terraform output | grep base_unit_test_instance_id | awk '{print $NF}' | tr -d '"')
 if [[ -n ${INSTANCEID} ]]
 then
   while [[ $(aws ec2 describe-instance-status --instance-id ${INSTANCEID} --region ${REGION} --output text | grep -v INSTANCESTATUSES | grep INSTANCESTATUS | awk '{print $NF}') != "ok" ]]
   do
-    echo -n "." 
+    echo -n "."
     sleep 10
   done
 fi
 
 INSTANCEIP=$(aws ec2 describe-instances --instance-id ${INSTANCEID} --region ${REGION} --output json | grep PublicIpAddress | awk -F '"' '{print $4}')
+if [[ -z ${INSTANCEIP} ]]
+then
+  echo "ERROR: return status greater than zero for command ."
+  exit 1
+fi
+
 ssh-keyscan -H ${INSTANCEIP} >> ~/.ssh/known_hosts
+rCode=${?}
+if [[ ${rCode} > 0 ]]
+then
+  echo "ERROR: return status greater than zero for command ssh-keyscan."
+  exit 1
+fi
+
 RESULT=$(ssh -i base_unit_test_key ubuntu@${INSTANCEIP} "cat /var/tmp/base_unit_test" 2>/dev/null)
 
 terraform destroy -auto-approve -compact-warnings
