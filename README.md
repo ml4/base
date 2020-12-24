@@ -5,6 +5,7 @@
 ![CIS Compliance](https://img.shields.io/badge/CIS_Compliance-100%25-green.svg?style=for-the-badge)
 ![Packer version](https://img.shields.io/badge/packer-1.6.5-00ACFF.svg?style=for-the-badge)
 ![Vagrant version](https://img.shields.io/badge/vagrant-2.2.13-1563ff.svg?style=for-the-badge)
+![Terraform version](https://img.shields.io/badge/vagrant-0.14.3-623CE4.svg?style=for-the-badge)
 ![Ubuntu version](https://img.shields.io/badge/ubuntu-18.05LTS-blue.svg?style=for-the-badge)
 ![Packer language](https://img.shields.io/badge/packer-JSON-blueviolet.svg?style=for-the-badge)
 ![Provisioning language](https://img.shields.io/badge/provisioning-bash-blueviolet.svg?style=for-the-badge)
@@ -24,7 +25,7 @@
 
 ## Prerequisites
 * Packer and Terraform.
-* An AWS account, with locally configured credentials (by which I mean AWS AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY).
+* An AWS account, with locally configured credentials (by which I mean AWS AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY and if you require it, AWS_SESSION_TOKEN).
 * A working [AWS cli tool](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-mac.html).
 * Permissions to create EC2 instances, volumes, S3 buckets, s3 objects, user roles, role policies.
 * A _privately_ accessible AWS S3 bucket.  Packer will deposit the image in OVA format in this bucket, and then create the AMI from it using the standard [AWS process](https://docs.aws.amazon.com/vm-import/latest/userguide/vmie_prereqs.html) leaving the bucket empty.
@@ -39,6 +40,7 @@
 . init.sh
 ```
 * The `run.sh` will list all AMIs with a tag Name = `base` and delete all but the latest and their corresponding snapshots.  Read the code.
+* The build should take ~40 mminutes mostly due to the import process to AWS and copying the AMI into the chosen region.  Multi-region copies are not currently supported, but are penned for dev.
 
 ## Notes
 * Running the build below means the Ubuntu default user password used will be on your file system only during the build.
