@@ -7,8 +7,6 @@
 ![Vagrant version](https://img.shields.io/badge/vagrant-2.2.13-1563ff.svg?style=for-the-badge)
 ![Terraform version](https://img.shields.io/badge/terraform-0.14.3-623CE4.svg?style=for-the-badge)
 ![Ubuntu version](https://img.shields.io/badge/ubuntu-18.05LTS-blue.svg?style=for-the-badge)
-![Packer language](https://img.shields.io/badge/packer-JSON-blueviolet.svg?style=for-the-badge)
-![Provisioning language](https://img.shields.io/badge/provisioning-bash-blueviolet.svg?style=for-the-badge)
 ![Written with](https://img.shields.io/badge/written_with-macOS-333.svg?style=for-the-badge)
 
 # base

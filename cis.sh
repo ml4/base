@@ -9,6 +9,13 @@
 set -Eeuo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
+ ####  #  ####
+#    # # #
+#      #  ####
+#      #      #
+#    # # #    #
+ ####  #  ####
+
 function log {
   bldblk='\e[1;30m' # Black - Bold
   bldred='\e[1;31m' # Red
@@ -44,7 +51,7 @@ function log {
 last_comm=
 curr_comm=
 log_file=/root/base.log
-exec > >(stdbuf -i0 -oL -eL awk '{print strftime("%Y-%m-%d %H:%M:%S"), $0 }' | stdbuf -i0 -oL -eL tee "$log_file") 2>&1 
+exec > >(stdbuf -i0 -oL -eL awk '{print strftime("%Y-%m-%d %H:%M:%S"), $0 }' | stdbuf -i0 -oL -eL tee "$log_file") 2>&1
 trap 'last_comm=${curr_comm}; curr_comm=${BASH_COMMAND}' DEBUG
 trap 'log "ERROR" "Command \"${last_comm}\" exited with exit code $?."' EXIT
 
@@ -60,7 +67,7 @@ function handleExit {
 }
 
 ## convenience function to test return code. Some commands don't work (sed or pipelines) due to quoting reasons so
-## have separate treatments below 
+## have separate treatments below
 #
 function logRun {
   local -r cis="${1}"
@@ -217,16 +224,16 @@ log "INFO" "1.4.1: Adding mailhub=smtp.gmail.com to /etc/ssmtp/ssmtp.conf"
 sudo sed -i s/^mailhub=.*$/mailhub=smtp.gmail.com:587/ /etc/ssmtp/ssmtp.conf
 
 if [[ -z $(sudo grep '^AuthUser=' /etc/ssmtp/ssmtp.conf) ]]
-then 
+then
   log "INFO" "1.4.1: Appending AuthUser to /etc/ssmtp/ssmtp.conf"
   echo "AuthUser=${GMAIL}" | sudo tee -a /etc/ssmtp/ssmtp.conf
-else 
+else
   log "INFO" "1.4.1: Amending AuthUser=${GMAIL} in /etc/ssmtp/ssmtp.conf"
   sudo sed -i "s/^AuthUser=.*$/AuthUser=${GMAIL}/" /etc/ssmtp/ssmtp.conf
 fi
 
 if [[ -z $(sudo grep '^AuthPass=' /etc/ssmtp/ssmtp.conf) ]]
-then 
+then
   log "INFO" "1.4.1: Appending AuthPass=<GMAILPASSWORD> to /etc/ssmtp/ssmtp.conf"
   echo "AuthPass=%%GMAILPASSWORD%%" | sudo tee -a /etc/ssmtp/ssmtp.conf
   sudo sed -i "s/AuthPass=%%GMAILPASSWORD%%/AuthPass=${GMAILPASSWORD}/" /etc/ssmtp/ssmtp.conf
@@ -236,10 +243,10 @@ else
 fi
 
 if [[ -z $(sudo grep '^UseSTARTTLS=' /etc/ssmtp/ssmtp.conf) ]]
-then 
+then
   log "INFO" "1.4.1: Appending UseSTARTTLS=YES to /etc/ssmtp/ssmtp.conf"
   echo "UseSTARTTLS=YES" | sudo tee -a /etc/ssmtp/ssmtp.conf
-else 
+else
   log "INFO" "1.4.1: Amending UseSTARTTLS in /etc/ssmtp/ssmtp.conf"
   sudo sed -i 's/^UseSTARTTLS=.*$/UseSTARTTLS=YES/' /etc/ssmtp/ssmtp.conf
 fi
@@ -315,7 +322,7 @@ log "INFO" "1.6.4: Running sudo echo '@reboot root sysctl -p' | sudo tee -a /etc
 echo '@reboot root sysctl -p' | sudo tee -a /etc/crontab
 
 # CIS benchmarking 1.7 Mandatory Access Control
-# CIS benchmarking 1.7.1 Configure AppArmor 
+# CIS benchmarking 1.7.1 Configure AppArmor
 # CIS benchmarking 1.7.1.1 Ensure AppArmor is installed (Scored)
 logRun "1.7.1.1" "sudo apt-get --quiet --assume-yes install apparmor apparmor-utils"
 
@@ -345,10 +352,10 @@ fi
 ## when it comes up, the rsyslogd enforcing profile will be applied which is a healthy approach.
 #
 # CIS benchmarking 1.7.1.4 Ensure all AppArmor Profiles are enforcing (Scored)
-logRun "1.7.1.4" "sudo aa-enforce /etc/apparmor.d/*" 
+logRun "1.7.1.4" "sudo aa-enforce /etc/apparmor.d/*"
 
 # CIS benchmarking 1.8 Warning Banners
-# CIS benchmarking 1.8.1 Command Line Warning Banners 
+# CIS benchmarking 1.8.1 Command Line Warning Banners
 # CIS benchmarking 1.8.1.1 Ensure message of the day is configured properly (Scored)
 ## CIS advice is off here as Ubuntu has used PAM-based motd for several versions
 log "INFO" "1.8.1.1: Writing /etc/motd"
@@ -399,7 +406,7 @@ echo "##########################################################################
 
 # CIS benchmarking 2 Services
 # CIS benchmarking 2.1 inetd Services
-# CIS benchmarking 2.1.1 Ensure xinetd is not installed (Scored) 
+# CIS benchmarking 2.1.1 Ensure xinetd is not installed (Scored)
 # CIS benchmarking 2.1.2 Ensure openbsd-inetd is not installed (Scored)
 logRun "2.1.1-2.1.2" "sudo apt-get --quiet --assume-yes purge --auto-remove xinetd openbsd-inetd"
 
@@ -463,7 +470,7 @@ logRun "2.2.1.4" "sudo systemctl restart ntp"
 # CIS benchmarking 2.2.12 Ensure Samba is not enabled (Scored)
 # CIS benchmarking 2.2.13 Ensure HTTP Proxy Server is not enabled (Scored)
 # CIS benchmarking 2.2.14 Ensure SNMP Server is not enabled (Scored)
-# CIS benchmarking 2.2.15 Ensure mail transfer agent is configured for local-only mode (Scored) - removed/replaced with sSMTP 
+# CIS benchmarking 2.2.15 Ensure mail transfer agent is configured for local-only mode (Scored) - removed/replaced with sSMTP
 # CIS benchmarking 2.2.16 Ensure rsync service is not enabled (Scored)
 # CIS benchmarking 2.2.17 Ensure NIS Server is not enabled (Scored)
 logRun "2.2.2-2.2.17" "sudo apt-get --quiet --assume-yes purge --auto-remove xserver-xorg*"
@@ -624,15 +631,15 @@ logRun "3.5.2.3" "sudo ufw deny in from ::1"
 # Using iptables over other firewall software - for now. Move to nftables in time.
 # CIS benchmarking 3.5.4 Configure iptables
 # CIS benchmarking 3.5.4.1 Configure IPv4 iptables
-# Flush IPtables rules 
+# Flush IPtables rules
 logRun "3.5.4" "sudo iptables -F"
 # CIS benchmarking 3.5.4.1.1 Ensure default deny firewall policy (Scored)
-# Ensure default deny firewall policy 
+# Ensure default deny firewall policy
 logRun "3.5.4" "sudo iptables -P INPUT DROP"
 logRun "3.5.4" "sudo iptables -P OUTPUT DROP"
 logRun "3.5.4" "sudo iptables -P FORWARD DROP"
 # CIS benchmarking 3.5.4.1.2 Ensure loopback traffic is configured (Scored)
-# Ensure loopback traffic is configured 
+# Ensure loopback traffic is configured
 logRun "3.5.4" "sudo iptables -A INPUT -i lo -j ACCEPT "
 logRun "3.5.4" "sudo iptables -A OUTPUT -o lo -j ACCEPT "
 logRun "3.5.4" "sudo iptables -A INPUT -s 127.0.0.0/8 -j DROP"
@@ -650,15 +657,15 @@ logRun "3.5.4.1.4" "sudo iptables -A INPUT -p tcp --dport 22 -m state --state NE
 
 # ipv6 FW not going in just yet due to poor support from public cloud vendors. COMMENTING OUT UNLESS CISCAT BARFS
 # CIS benchmarking 3.5.4.2 Configure IPv6 ip6tables
-# Flush IPtables rules 
+# Flush IPtables rules
 # logRun "sudo ip6tables -F"
 # # CIS benchmarking 3.5.4.2.1 Ensure IPv6 default deny firewall policy (Scored)
-# # Ensure default deny firewall policy 
+# # Ensure default deny firewall policy
 # logRun "sudo ip6tables -P INPUT DROP"
 # logRun "sudo ip6tables -P OUTPUT DROP"
 # logRun "sudo ip6tables -P FORWARD DROP"
 # # CIS benchmarking 3.5.4.2.2 Ensure IPv6 loopback traffic is configured (Scored)
-# # Ensure loopback traffic is configured 
+# # Ensure loopback traffic is configured
 # logRun "sudo ip6tables -A INPUT -i lo -j ACCEPT "
 # logRun "sudo ip6tables -A OUTPUT -o lo -j ACCEPT "
 # logRun "sudo ip6tables -A INPUT -s ::1 -j DROP"
@@ -702,7 +709,7 @@ echo "##########################################################################
 ## The tenets are to maintain maximum security, and expectation of the machine shipping all logs to a
 ## cloud-based central logging facility.
 # CIS benchmarking 4.1 Configure System Accounting (auditd)
-# CIS benchmarking 4.1.1 Ensure auditing is enabled 
+# CIS benchmarking 4.1.1 Ensure auditing is enabled
 # CIS benchmarking 4.1.1.1 Ensure auditd is installed (Scored)
 logRun "4.1.1.1" "sudo apt-get --quiet --assume-yes install auditd audispd-plugins"
 
@@ -794,11 +801,11 @@ log "INFO" "4.1.5: Adding network modify actions to audit.rules"
 cat << 'EOF' | sudo tee -a /etc/audit/rules.d/audit.rules
 
 # CIS benchmarking 4.1.5 Ensure events that modify the system's network environment are collected (Scored)
--a always,exit -F arch=b64 -S sethostname -S setdomainname -k system-locale 
--a always,exit -F arch=b32 -S sethostname -S setdomainname -k system-locale 
+-a always,exit -F arch=b64 -S sethostname -S setdomainname -k system-locale
+-a always,exit -F arch=b32 -S sethostname -S setdomainname -k system-locale
 -w /etc/issue -p wa -k system-locale
 -w /etc/issue.net -p wa -k system-locale
--w /etc/hosts -p wa -k system-locale 
+-w /etc/hosts -p wa -k system-locale
 -w /etc/network -p wa -k system-locale
 EOF
 
@@ -807,7 +814,7 @@ log "INFO" "4.1.6: Adding MAC modify actions to audit.rules"
 cat << 'EOF' | sudo tee -a /etc/audit/rules.d/audit.rules
 
 # CIS benchmarking 4.1.6 Ensure events that modify the system's Mandatory Access Controls are collected (Scored)
--w /etc/apparmor/ -p wa -k MAC-policy 
+-w /etc/apparmor/ -p wa -k MAC-policy
 -w /etc/apparmor.d/ -p wa -k MAC-policy
 EOF
 
@@ -816,8 +823,8 @@ log "INFO" "4.1.7: Adding login/out modify actions to audit.rules"
 cat << 'EOF' | sudo tee -a /etc/audit/rules.d/audit.rules
 
 # CIS benchmarking 4.1.7 Ensure login and logout events are collected (Scored)
--w /var/log/faillog -p wa -k logins 
--w /var/log/lastlog -p wa -k logins 
+-w /var/log/faillog -p wa -k logins
+-w /var/log/lastlog -p wa -k logins
 -w /var/log/tallylog -p wa -k logins
 EOF
 
@@ -826,8 +833,8 @@ log "INFO" "4.1.8: Adding session initiation information collection to audit.rul
 cat << 'EOF' | sudo tee -a /etc/audit/rules.d/audit.rules
 
 # CIS benchmarking 4.1.8 Ensure session initiation information is collected (Scored)
--w /var/run/utmp -p wa -k session 
--w /var/log/wtmp -p wa -k logins 
+-w /var/run/utmp -p wa -k session
+-w /var/log/wtmp -p wa -k logins
 -w /var/log/btmp -p wa -k logins
 EOF
 
@@ -849,9 +856,9 @@ log "INFO" "4.1.10: Adding unauthorized file access rules to audit.rules"
 cat << 'EOF' | sudo tee -a /etc/audit/rules.d/audit.rules
 
 # CIS benchmarking 4.1.10 Ensure unsuccessful unauthorized file access attempts are collected (Scored)
--a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access 
--a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access 
--a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access 
+-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access
+-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access
+-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access
 -a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access
 EOF
 
@@ -1083,7 +1090,7 @@ for entry in 'Protocol 2' 'LogLevel INFO' 'X11Forwarding no' 'MaxAuthTries 4' 'I
 do
   key=$(echo ${entry} | cut -f1 -d' ')
   val=$(echo ${entry} | cut -f2 -d' ')
-    
+
   if [[ $(sudo grep -e ^${key} /etc/ssh/sshd_config) ]]
   then
     log "INFO" "5.2.x: Setting sshd ${key} to ${val}"
@@ -1205,7 +1212,7 @@ fi
 
 # CIS benchmarking 5.3.4 Ensure password hashing algorithm is SHA-512 (Scored)
 if [[ $(sudo egrep -e '^password\s+(\S+\s+)+pam_unix\.so\s+(\S+\s+)*sha512' /etc/pam.d/common-password) ]]
-then 
+then
   log "INFO" "5.3.4: Password hashing algorithm already at sha512"
 else
   log "WARN" "5.3.4: PAM pam_unix.so not set to sufficiently strong algorithm: resetting to sha512"
@@ -1223,7 +1230,7 @@ do
   chage --maxdays 90 ${entry}
 done
 
-# CIS benchmarking 5.4.1.2 Ensure minimum days between password changes is configured (Scored). 
+# CIS benchmarking 5.4.1.2 Ensure minimum days between password changes is configured (Scored).
 log "INFO" "5.4.1.2: Setting PASS_MIN_DAYS to 7 in /etc/login.defs"
 sudo sed -i 's/^PASS_MIN_DAYS.*/PASS_MIN_DAYS 7/' /etc/login.defs
 log "INFO" "5.4.1.2: Running sudo cat /etc/shadow | cut -d: -f1 | while read entry; do chage --mindays 1 ${entry}; done"
@@ -1259,7 +1266,7 @@ sudo awk -F: '($1!="root" && $1!="sync" && $1!="shutdown" && $1!="halt" && $1!~/
 
 log "INFO" "5.4.2: automatically lock non root system accounts"
 sudo awk -F: '($1!="root" && $1!~/^\+/ && $3<'"$(awk '/^\s*UID_MIN/{print $2}' /etc/login.defs)"') {print $1}' /etc/passwd | xargs -I '{}' sudo passwd -S '{}' | awk '($2!="L" && $2!="LK") {print $1}' | while read -r user; do sudo usermod -L "$user"; done
- 
+
 # CIS benchmarking 5.4.3 Ensure default group for the root account is GID 0 (Scored)
 logRun "5.4.3" "sudo usermod -g 0 root"
 
@@ -1530,12 +1537,12 @@ do
   then
     handleExit "6.2.9: The home directory (${dir}) of user ${user} does not exist.  Correct your build" "88"
   else
-    owner=$(stat -L -c "%U" "${dir}") 
+    owner=$(stat -L -c "%U" "${dir}")
     if [[ "${owner}" != "${user}" ]]
     then
-      handleExit "6.2.9: The home directory (${dir}) of user ${user} is owned by ${owner}.  Correct your build." "89" 
+      handleExit "6.2.9: The home directory (${dir}) of user ${user} is owned by ${owner}.  Correct your build." "89"
     fi
-  fi 
+  fi
 done
 
 # CIS benchmarking 6.2.10 Ensure users' dot files are not group or world writable (Scored)
@@ -1548,19 +1555,19 @@ do
     for file in ${dir}/.[A-Za-z0-9]*
     do
       if [ ! -h "${file}" -a -f "${file}" ]
-      then 
+      then
         fileperm=$(ls -ld ${file} | cut -f1 -d" ")
         if [[ $(echo ${fileperm} | cut -c6) != "-" ]]
         then
           handleExit "6.2.10: Group Write permission set on file ${file}.  Correct your build." "91"
         fi
-        
+
         if [[ $(echo ${fileperm} | cut -c9) != "-" ]]
         then
           handleExit "6.2.10: Other Write permission set on file ${file}.  Correct your build." "92"
-        fi 
+        fi
       fi
-    done 
+    done
   fi
 done
 
@@ -1575,7 +1582,7 @@ do
     then
       handleExit "6.2.11: .forward file ${dir}/.forward exists.  Correct your build." "94"
     fi
-  fi 
+  fi
 done
 
 # CIS benchmarking 6.2.12 Ensure no users have .netrc files (Scored)
@@ -1589,7 +1596,7 @@ do
     then
       handleExit "6.2.12: .netrc file ${dir}/.netrc exists.  Correct your build." "96"
     fi
-  fi 
+  fi
 done
 
 # CIS benchmarking 6.2.13 Ensure users' .netrc Files are not group or world accessible (Scored)
@@ -1657,7 +1664,7 @@ done
 
 # CIS benchmarking 6.2.15 Ensure all groups in /etc/passwd exist in /etc/group (Scored)
 for i in $(cut -s -d: -f4 /etc/passwd | sort -u )
-do 
+do
   if [[ $(grep -q -P "^.*?:[^:]*:${i}:" /etc/group) -ne 0 ]]
   then
     handleExit "6.2.15: Group ${i} is referenced by /etc/passwd but does not exist in /etc/group.  Correct your build." "106"
@@ -1730,7 +1737,7 @@ logRun "1.5.1" "sudo chown root:root /boot/grub/grub.cfg"
 logRun "1.5.1" "sudo chmod og-rwx /boot/grub/grub.cfg"
 # logRun "3.6" "sudo apt-get --quiet --assume-yes remove network-manager"
 
-## jah brendan 
+## jah brendan
 #
 echo "##################################################################################################"
 echo
