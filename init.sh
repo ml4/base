@@ -1,12 +1,12 @@
 ## This script automates the initiation of the packer build environment to ensure all env vars are instantiated
 #
 
-# #    # # #####
-# ##   # #   #
-# # #  # #   #
-# #  # # #   #
-# #   ## #   #
-# #    # #   #
+#####    ##    ####  ######    # #    # # #####
+#    #  #  #  #      #         # ##   # #   #
+#####  #    #  ####  #####     # # #  # #   #
+#    # ######      # #         # #  # # #   #
+#    # #    # #    # #         # #   ## #   #
+#####  #    #  ####  ######    # #    # #   #
 
 if [ -z $(echo ${GRUB_PASSWORD}) ]
 then
@@ -78,4 +78,3 @@ then
   echo
 fi
 
-./run.sh
