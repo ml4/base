@@ -27,13 +27,13 @@ function log {
   txtrst='\e[0m'    # Text Reset
 
   local -r level="$1"
-  if [ "${level}" == "INFO" ]
+  if [[ "${level}" == "INFO" ]]
   then
     COL=${bldgrn}
-  elif [ "${level}" == "ERROR" ]
+  elif [[ "${level}" == "ERROR" ]]
   then
     COL=${bldred}
-  elif [ "${level}" == "WARN" ]
+  elif [[ "${level}" == "WARN" ]]
   then
     COL=${bldylw}
   fi
@@ -50,30 +50,30 @@ then
   exit 1
 fi
 
-if [ -z "$(command -v packer)" ]
+if [[ -z "$(command -v packer)" ]]
 then
   log "ERROR" "Install Packer first"
   exit 1
 fi
 
-if [ -z "$(command -v terraform)" ]
+if [[ -z "$(command -v terraform)" ]]
 then
   log "ERROR" "Install Terraform first"
   exit 1
 fi
 
-if  [ -n "${S3_BUCKET}" ]
+if [[ -n "${S3_BUCKET}" ]]
 then
   aws s3 ls | awk '{print $NF}' | grep ^${S3_BUCKET}$
   rCode=${?}
-  if [ ${rCode} -gt 0 ]
+  if [[ ${rCode} -gt 0 ]]
   then
     log "ERROR" "S3 bucket ${S3_BUCKET} does not exist - create it first"
     exit 1
   fi
   aws iam get-role --role-name vmimport >/dev/null 2>&1
   rCode=${?}
-  if [ ${rCode} -gt 0 ]
+  if [[ ${rCode} -gt 0 ]]
   then
     cat role-policy.src | sed "s/%%S3_BUCKET%%/${S3_BUCKET}/g" > role-policy.json
     aws iam create-role --role-name vmimport --assume-role-policy-document file://trust-policy.json
@@ -84,7 +84,7 @@ else
   exit 1
 fi
 
-if [ -n "${GRUB_PASSWORD}" -a -n "${GMAIL}" -a -n "${GMAILPASSWORD}" -a -n "${HOST}" -a -n "${DOMAIN}" -a -n "${AWS_ACCESS_KEY_ID}" -a -n "${AWS_SECRET_ACCESS_KEY}" -a -n "${S3_BUCKET}" -a -n "${UBUNTUPASSWORD}" -a -n "${REGION}" ]
+if [[ -n "${GRUB_PASSWORD}" && -n "${GMAIL}" && -n "${GMAILPASSWORD}" && -n "${HOST}" && -n "${DOMAIN}" && -n "${AWS_ACCESS_KEY_ID}" && -n "${AWS_SECRET_ACCESS_KEY}" && -n "${S3_BUCKET}" && -n "${UBUNTUPASSWORD}" && -n "${REGION}" ]]
 then
   cat preseed.src | sed "s/%%UBUNTUPASSWORD%%/${UBUNTUPASSWORD}/g" > preseed.cfg
   packer build -var=email=${GRUB_PASSWORD} -var=email=${GMAIL} -var=emailPassword=${GMAILPASSWORD} \
@@ -98,7 +98,7 @@ else
   exit 1
 fi
 
-if [ -f preseed.cfg ]
+if [[ -f preseed.cfg ]]
 then
   log "ERROR" "preseed.cfg still present so Packer build must have failed."
   exit 1
@@ -116,7 +116,7 @@ sed "s/%%LATESTBASE%%/${LATESTBASE}/; s/%%REGION%%/${REGION}/" main.src > main.t
 #
 terraform init -upgrade
 rCode=${?}
-if [ ${rCode} -gt 0 ]
+if [[ ${rCode} -gt 0 ]]
 then
   log "ERROR" "Problem running terraform init"
   exit 1
@@ -124,7 +124,7 @@ fi
 
 terraform apply -auto-approve -compact-warnings
 rCode=${?}
-if [ ${rCode} -gt 0 ]
+if [[ ${rCode} -gt 0 ]]
 then
   log "ERROR" "Problem running terraform apply"
   exit 1
@@ -150,7 +150,6 @@ else
   if [[ ${rCode} > 0 ]]
   then
     log "ERROR" "Return status greater than zero for command terraform destroy -auto-approve -compact-warnings"
-    exit 1
   fi
   exit 1
 fi
@@ -165,13 +164,12 @@ then
   if [[ ${rCode} > 0 ]]
   then
     log "ERROR" "Return status greater than zero for command terraform destroy -auto-approve -compact-warnings"
-    exit 1
   fi
   exit 1
 fi
 
-log "INFO" "Adding non-interactive SSH capability with: ssh-keyscan -H |${INSTANCEIP}| >> ~/.ssh/known_hosts"
-ssh-keyscan -H ${INSTANCEIP} >> ~/.ssh/known_hosts
+log "INFO" "Adding non-interactive SSH capability with: ssh-keyscan -H |${INSTANCEIP}| | tee -a ~/.ssh/known_hosts"
+ssh-keyscan -H ${INSTANCEIP} | tee -a ~/.ssh/known_hosts
 rCode=${?}
 if [[ ${rCode} > 0 ]]
 then
@@ -181,7 +179,6 @@ then
   if [[ ${rCode} > 0 ]]
   then
     log "ERROR" "Return status greater than zero for command terraform destroy -auto-approve -compact-warnings"
-    exit 1
   fi
   exit 1
 fi
