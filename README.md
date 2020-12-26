@@ -33,12 +33,17 @@
 ## Initialisation
 * Use a Linux machine somewhere and generate yourself a Linux boot password with [grub-mkpasswd-pbkdf2](https://www.gnu.org/software/grub/manual/grub/html_node/Invoking-grub_002dmkpasswd_002dpbkdf2.html) - save this for later.
 * The `run.sh` script in this repo is triggered by the `init.sh` and configures IAM in your account so that the build process works - Check [this](https://rzn.id.au/tech/converting-an-ova-to-an-amazon-ami/) post, credence to Jake.
-* Run the build. This will ask for any outstanding variable values in order for it to trigger the run.sh which itself runs the Packer build and nominal Terraform unit test:
+* Run the build using make as below. This will ask for any outstanding variable values in order for it to trigger the `run.sh` which itself runs the `packer build` and nominal Terraform unit test:
 ```shell
-. init.sh
+make
 ```
 * The `run.sh` will list all AMIs with a tag Name = `base` and delete all but the latest and their corresponding snapshots.  Read the code.
 * The build should take ~40 mminutes mostly due to the import process to AWS and copying the AMI into the chosen region.  Multi-region copies are not currently supported, but are penned for dev.
+* For abortive builds use the below, ensuring to destroy an errored Packer-created VMs and SSH public keys on the cloud:
+```shell
+make clean
+```
+
 
 ## Notes
 * Running the build below means the Ubuntu default user password used will be on your file system only during the build.
