@@ -10,15 +10,14 @@ set -Eeuo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
 function log {
-  bldblk='\e[1;30m' # Black - Bold
-  bldred='\e[1;31m' # Red
-  bldgrn='\e[1;32m' # Green
-  bldylw='\e[1;33m' # Yellow
-  bldblu='\e[1;34m' # Blue
-  bldpur='\e[1;35m' # Purple
-  bldcyn='\e[1;36m' # Cyan
-  bldwht='\e[1;37m' # White
-  txtrst='\e[0m'    # Text Reset
+  bldred='\033[0;31m' # Red
+  bldgrn='\033[1;32m' # Green
+  bldylw='\033[1;33m' # Yellow
+  bldblu='\033[1;34m' # Blue
+  bldpur='\033[1;35m' # Purple
+  bldcyn='\033[1;36m' # Cyan
+  bldwht='\033[1;37m' # White
+  txtrst='\033[0m'    # Text Reset
 
   local -r level="$1"
   if [ "${level}" == "INFO" ]
@@ -32,7 +31,7 @@ function log {
     COL=${bldylw}
   fi
   local -r message="$2"
-  >&2 echo -e "[${COL}${level}${txtrst}] ${message}"
+  >&2 echo -e "[${COL}${level}${bldwht}]${txtrst} ${message}"
 }
 
 

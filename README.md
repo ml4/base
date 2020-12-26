@@ -33,7 +33,7 @@
 ## Initialisation
 * Use a Linux machine somewhere and generate yourself a Linux boot password with [grub-mkpasswd-pbkdf2](https://www.gnu.org/software/grub/manual/grub/html_node/Invoking-grub_002dmkpasswd_002dpbkdf2.html) - save this for later.
 * The `run.sh` script in this repo is triggered by the `init.sh` and configures IAM in your account so that the build process works - Check [this](https://rzn.id.au/tech/converting-an-ova-to-an-amazon-ami/) post, credence to Jake.
-* Run the build using make as below. This will ask for any outstanding variable values in order for it to trigger the `run.sh` which itself runs the `packer build` and nominal Terraform unit test:
+* Run the build using `make` as below. This will ask for any outstanding variable values in order for it to trigger the `run.sh` which itself runs the `packer build` and nominal Terraform unit test:
 ```shell
 make
 ```

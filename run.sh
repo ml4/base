@@ -14,35 +14,94 @@
 #    # #    # #    # #         #   #  #    # #   ##
 #####  #    #  ####  ######    #    #  ####  #    #
 
+RED='\033[0;31m'
 
 function log {
-  bldblk='\e[1;30m' # Black - Bold
-  bldred='\e[1;31m' # Red
-  bldgrn='\e[1;32m' # Green
-  bldylw='\e[1;33m' # Yellow
-  bldblu='\e[1;34m' # Blue
-  bldpur='\e[1;35m' # Purple
-  bldcyn='\e[1;36m' # Cyan
-  bldwht='\e[1;37m' # White
-  txtrst='\e[0m'    # Text Reset
+  bldred='\033[0;31m' # Red
+  bldgrn='\033[1;32m' # Green
+  bldylw='\033[1;33m' # Yellow
+  bldblu='\033[1;34m' # Blue
+  bldpur='\033[1;35m' # Purple
+  bldcyn='\033[1;36m' # Cyan
+  bldwht='\033[1;37m' # White
+  txtrst='\033[0m'    # Text Reset
 
   local -r level="$1"
-  if [[ "${level}" == "INFO" ]]
+  if [ "${level}" == "INFO" ]
   then
     COL=${bldgrn}
-  elif [[ "${level}" == "ERROR" ]]
+  elif [ "${level}" == "ERROR" ]
   then
     COL=${bldred}
-  elif [[ "${level}" == "WARN" ]]
+  elif [ "${level}" == "WARN" ]
   then
     COL=${bldylw}
   fi
   local -r message="$2"
-  >&2 echo -e "[${COL}${level}${txtrst}] ${message}"
+  >&2 echo -e "[${COL}${level}${bldwht}]${txtrst} ${message}"
 }
 
+if [[ -z "${GRUB_PASSWORD}" ]]
+then
+  log "ERROR" "GRUB_PASSWORD is not set"
+  exit 1
+fi
+
+if [[ -z "${GMAIL}" ]]
+then
+  log "ERROR" "GMAIL is not set"
+  exit 1
+fi
+
+if [[ -z "${GMAILPASSWORD}" ]]
+then
+  log "ERROR" "GMAILPASSWORD is not set"
+  exit 1
+fi
+
+if [[ -z "${HOST}" ]]
+then
+  log "ERROR" "HOST is not set"
+  exit 1
+fi
+
+if [[ -z "${DOMAIN}" ]]
+then
+  log "ERROR" "DOMAIN is not set"
+  exit 1
+fi
+
+if [[ -z "${AWS_ACCESS_KEY_ID}" ]]
+then
+  log "ERROR" "AWS_ACCESS_KEY_ID is not set"
+  exit 1
+fi
+
+if [[ -z "${AWS_SECRET_ACCESS_KEY}" ]]
+then
+  log "ERROR" "AWS_SECRET_ACCESS_KEY is not set"
+  exit 1
+fi
+
+if [[ -z "${UBUNTUPASSWORD}" ]]
+then
+  log "ERROR" "UBUNTUPASSWORD is not set"
+  exit 1
+fi
+
+if [[ -z "${REGION}" ]]
+then
+  log "ERROR" "REGION is not set"
+  exit 1
+fi
+
 log "INFO" "Creating temporary SSH key pair"
-ssh-keygen -t rsa -b 4096 -N "" -C "base_unit_test_key" -f base_unit_test_key
+if [[ -r "./base_unit_test_key" && "./base_unit_test_key.pub" ]]
+then
+  log "INFO" "Found base_unit_test_key pair - using"
+else
+    ssh-keygen -t rsa -b 4096 -N "" -C "base_unit_test_key" -f base_unit_test_key
+fi
 rCode=${?}
 if [ ${rCode} -gt 0 ]
 then
@@ -84,19 +143,16 @@ else
   exit 1
 fi
 
-if [[ -n "${GRUB_PASSWORD}" && -n "${GMAIL}" && -n "${GMAILPASSWORD}" && -n "${HOST}" && -n "${DOMAIN}" && -n "${AWS_ACCESS_KEY_ID}" && -n "${AWS_SECRET_ACCESS_KEY}" && -n "${S3_BUCKET}" && -n "${UBUNTUPASSWORD}" && -n "${REGION}" ]]
-then
-  cat preseed.src | sed "s/%%UBUNTUPASSWORD%%/${UBUNTUPASSWORD}/g" > preseed.cfg
-  packer build -var=email=${GRUB_PASSWORD} -var=email=${GMAIL} -var=emailPassword=${GMAILPASSWORD} \
-               -var=remoteLogHost=${HOST}.${DOMAIN} -var=hostname=${HOST} \
-               -var=domain=${DOMAIN} -var=aws_access_key_id=${AWS_ACCESS_KEY_ID} \
-               -var=aws_secret_access_key=${AWS_SECRET_ACCESS_KEY} \
-               -var=aws_session_token=${AWS_SESSION_TOKEN} \
-               -var=s3_bucket=${S3_BUCKET} -var=region=${REGION} -var=ubuntu_password=${UBUNTUPASSWORD} base.json && rm preseed.cfg role-policy.json 2>/dev/null
-else
-  log "ERROR" "Please ensure all required environment variables are set."
-  exit 1
-fi
+## MAIN CALL
+#
+cat preseed.src | sed "s/%%UBUNTUPASSWORD%%/${UBUNTUPASSWORD}/g" > preseed.cfg
+packer build -var=email=${GRUB_PASSWORD} -var=email=${GMAIL} -var=emailPassword=${GMAILPASSWORD} \
+              -var=remoteLogHost=${HOST}.${DOMAIN} -var=hostname=${HOST} \
+              -var=domain=${DOMAIN} -var=aws_access_key_id=${AWS_ACCESS_KEY_ID} \
+              -var=aws_secret_access_key=${AWS_SECRET_ACCESS_KEY} \
+              -var=aws_session_token=${AWS_SESSION_TOKEN} \
+              -var=s3_bucket=${S3_BUCKET} -var=region=${REGION} -var=ubuntu_password=${UBUNTUPASSWORD} base.json && rm preseed.cfg role-policy.json 2>/dev/null
+
 
 if [[ -f preseed.cfg ]]
 then

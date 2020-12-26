@@ -1,6 +1,6 @@
 build:
-	. init.sh
-	./run.sh
+	@. init.sh
+	@./run.sh
 
 clean:
 	@read -p "Have you deleted any test VMs and SSH keypair from AWS (yes ? ^C && attend the AWS console : <enter>)?" NULL
