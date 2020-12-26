@@ -38,7 +38,7 @@ function log {
     COL=${bldylw}
   fi
   local -r message="$2"
-  >&2 echo -e "[${COL}${level}${bldwht}]${txtrst} ${message}"
+  >&2 echo -e "[${COL}${level}${txtrst}] ${message}"
 }
 
 
