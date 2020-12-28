@@ -41,21 +41,28 @@ function log {
   >&2 echo -e "${bldwht}[${COL}${level}${bldwht}] ${message}"
 }
 
-if [[ -z "${GRUBPASSWORD}" ]]
+
+if [[ -z "$(command -v packer)" ]]
 then
-  log "ERROR" "GRUBPASSWORD is not set"
+  log "ERROR" "Install Packer first"
+  exit 1
+fi
+
+if [[ -z "$(command -v terraform)" ]]
+then
+  log "ERROR" "Install Terraform first"
+  exit 1
+fi
+
+if [[ -z "${GRUB_PASSWORD}" ]]
+then
+  log "ERROR" "GRUB_PASSWORD is not set"
   exit 1
 fi
 
 if [[ -z "${GMAIL}" ]]
 then
   log "ERROR" "GMAIL is not set"
-  exit 1
-fi
-
-if [[ -z "${GMAILPASSWORD}" ]]
-then
-  log "ERROR" "GMAILPASSWORD is not set"
   exit 1
 fi
 
@@ -71,53 +78,9 @@ then
   exit 1
 fi
 
-if [[ -z "${AWS_ACCESS_KEY_ID}" ]]
-then
-  log "ERROR" "AWS_ACCESS_KEY_ID is not set"
-  exit 1
-fi
-
-if [[ -z "${AWS_SECRET_ACCESS_KEY}" ]]
-then
-  log "ERROR" "AWS_SECRET_ACCESS_KEY is not set"
-  exit 1
-fi
-
-if [[ -z "${UBUNTUPASSWORD}" ]]
-then
-  log "ERROR" "UBUNTUPASSWORD is not set"
-  exit 1
-fi
-
 if [[ -z "${REGION}" ]]
 then
   log "ERROR" "REGION is not set"
-  exit 1
-fi
-
-log "INFO" "Creating temporary SSH key pair"
-if [[ -r "./base_unit_test_key" && "./base_unit_test_key.pub" ]]
-then
-  log "INFO" "Found base_unit_test_key pair - using"
-else
-    ssh-keygen -t rsa -b 4096 -N "" -C "base_unit_test_key" -f base_unit_test_key
-fi
-rCode=${?}
-if [ ${rCode} -gt 0 ]
-then
-  log "ERROR" "Problem creating temporary SSH key pair"
-  exit 1
-fi
-
-if [[ -z "$(command -v packer)" ]]
-then
-  log "ERROR" "Install Packer first"
-  exit 1
-fi
-
-if [[ -z "$(command -v terraform)" ]]
-then
-  log "ERROR" "Install Terraform first"
   exit 1
 fi
 
@@ -140,6 +103,44 @@ then
   fi
 else
   log "ERROR" "S3_BUCKET is not set"
+  exit 1
+fi
+
+if [[ -z "${AWS_ACCESS_KEY_ID}" ]]
+then
+  log "ERROR" "AWS_ACCESS_KEY_ID is not set"
+  exit 1
+fi
+
+if [[ -z "${AWS_SECRET_ACCESS_KEY}" ]]
+then
+  log "ERROR" "AWS_SECRET_ACCESS_KEY is not set"
+  exit 1
+fi
+
+if [[ -z "${GMAILPASSWORD}" ]]
+then
+  log "ERROR" "GMAILPASSWORD is not set"
+  exit 1
+fi
+
+if [[ -z "${UBUNTUPASSWORD}" ]]
+then
+  log "ERROR" "UBUNTUPASSWORD is not set"
+  exit 1
+fi
+
+log "INFO" "Creating temporary SSH key pair"
+if [[ -r "./base_unit_test_key" && "./base_unit_test_key.pub" ]]
+then
+  log "INFO" "Found base_unit_test_key pair - using"
+else
+    ssh-keygen -t rsa -b 4096 -N "" -C "base_unit_test_key" -f base_unit_test_key
+fi
+rCode=${?}
+if [ ${rCode} -gt 0 ]
+then
+  log "ERROR" "Problem creating temporary SSH key pair"
   exit 1
 fi
 
@@ -209,6 +210,8 @@ else
   fi
   exit 1
 fi
+
+echo
 
 log "INFO" "Getting unit test instance ID with: aws ec2 describe-instances --instance-id |${INSTANCEID}| --region |${REGION}| --output json | grep PublicIpAddress"
 INSTANCEIP=$(aws ec2 describe-instances --instance-id ${INSTANCEID} --region ${REGION} --output json | grep PublicIpAddress | awk -F '"' '{print $4}')
