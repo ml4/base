@@ -31,7 +31,7 @@ function log {
     COL=${bldylw}
   fi
   local -r message="$2"
-  >&2 echo -e "${bldwht}[${COL}${level}${txtrst}] ${message}"
+  >&2 echo -e "${bldwht}[${COL}${level}${bldwht}] ${message}"
 }
 
 
@@ -75,7 +75,7 @@ echo "##########################################################################
 ## Add cloud-init ready for cloud building
 #
 checkOrRun "sudo apt-get --quiet --assume-yes install cloud-init"
-checkOrRun "sudo cloud-init init"
+# checkOrRun "sudo cloud-init init"
 
 # Apt cleanup.
 ## Remove other packages not covered by CIS benchmarking.

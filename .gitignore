@@ -21,3 +21,6 @@ preseed.cfg
 role-policy.json
 *.tfstate*
 base_unit_test_key*
+.terraform
+main.tf
+
