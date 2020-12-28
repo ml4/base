@@ -151,8 +151,7 @@ packer build -var=email=${GRUB_PASSWORD} -var=email=${GMAIL} -var=emailPassword=
               -var=domain=${DOMAIN} -var=aws_access_key_id=${AWS_ACCESS_KEY_ID} \
               -var=aws_secret_access_key=${AWS_SECRET_ACCESS_KEY} \
               -var=aws_session_token=${AWS_SESSION_TOKEN} \
-              -var=s3_bucket=${S3_BUCKET} -var=region=${REGION} -var=ubuntu_password=${UBUNTUPASSWORD} base.json && role-policy.json 2>/dev/null
-              # -var=s3_bucket=${S3_BUCKET} -var=region=${REGION} -var=ubuntu_password=${UBUNTUPASSWORD} base.json && rm preseed.cfg role-policy.json 2>/dev/null
+              -var=s3_bucket=${S3_BUCKET} -var=region=${REGION} -var=ubuntu_password=${UBUNTUPASSWORD} base.json && rm preseed.cfg role-policy.json 2>/dev/null
 
 
 if [[ -f preseed.cfg ]]
