@@ -28,32 +28,33 @@
 * Permissions to create EC2 instances, volumes, S3 buckets, s3 objects, user roles, role policies.
 * A _privately_ accessible AWS S3 bucket.  Packer will deposit the image in OVA format in this bucket, and then create the AMI from it using the standard [AWS process](https://docs.aws.amazon.com/vm-import/latest/userguide/vmie_prereqs.html) leaving the bucket empty.
 * A separate Ubuntu machine for Grub password generation.
-* Gmail account for system sSMTP configuration - the box will email this account during the build.
+* Gmail account for system sSMTP configuration - the box will email this account during the build and on boot.
 
 ## Initialisation
 * Use a Linux machine somewhere and generate yourself a Linux boot password with [grub-mkpasswd-pbkdf2](https://www.gnu.org/software/grub/manual/grub/html_node/Invoking-grub_002dmkpasswd_002dpbkdf2.html) - save this for later.
-* The `run.sh` script in this repo is triggered by the `init.sh` and configures IAM in your account so that the build process works - Check [this](https://rzn.id.au/tech/converting-an-ova-to-an-amazon-ami/) post, credence to Jake.
+* Use this to configure your environment variables; read the file before sourcing it.  Check [this](https://rzn.id.au/tech/converting-an-ova-to-an-amazon-ami/) post, credence to Jake.
+```shell
+. init.sh
+```
 * Run the build using `make` as below. This will ask for any outstanding variable values in order for it to trigger the `run.sh` which itself runs the `packer build` and nominal Terraform unit test:
 ```shell
 make
 ```
-* The `run.sh` will list all AMIs with a tag Name = `base` and delete all but the latest and their corresponding snapshots.  Read the code.
+* The `run.sh` will delete all but the latest AMI in your account with the tag name `base` and their corresponding snapshots.  Read the code.
+
+## Notes
 * The build should take ~40 mminutes mostly due to the import process to AWS and copying the AMI into the chosen region.  Multi-region copies are not currently supported, but are penned for dev.
 * For abortive builds use the below, ensuring to destroy an errored Packer-created VMs and SSH public keys on the cloud:
 ```shell
 make clean
 ```
-
-
-## Notes
-* Running the build below means the Ubuntu default user password used will be on your file system only during the build.
-* Once you have your base, differentiate it with equivalent Packer build pipelines to create AMIs for all your favourite toys and stacks and make them trigger when this one succeeds.
-* Bear in mind the `%%PHOENIX%%` replacement in the Phoenix builds (see below)
-* Default locale is GB in `preseed.src` and may need editing.
+* Running the above build means the Ubuntu default user password used will be on your file system only during the build.
+* Once you have your base, differentiate it with equivalent Packer build pipelines to create AMIs for all your favourite toys and stacks and make them trigger when this one succeeds.  Bear in mind the `%%PHOENIX%%` replacement in the Phoenix builds (see below).
+* Default locale is GB in `preseed.src`.
 * I build a root disk with 60Gb - update `preseed.src` if needed.
-* This build is currently designed to operate one-way on a new default distribution of Ubuntu, and is not idempotent due to CIS implementation conveniences.
+* This build is currently designed to operate one-way on a new default distribution of Ubuntu 18, and is not idempotent due to CIS implementation conveniences.
 * The `preseed.src` file includes `gawk` which supercedes `mawk` as it has `strftime`, and is required by the `cis.sh` script.
-* The default user on board is `ubuntu`, not `vagrant` which means a `vagrant up` will fail the login step and will have to be interrupted. A normal `ssh` will succeed on the command line specifying the correct user.
+* The default user on board is `ubuntu`, not `vagrant` which means a `vagrant up` will fail the login step and will have to be interrupted. A normal `ssh` should succeed on the command line specifying the correct user.
 * Other notes pertaining to the CIS v2.0.1 Ubuntu CIS benchmarking document:
   * 1.3.1: This config sets up `sSMTP` in order for `aide` to be able to send email requires a hostname which defaults to `${HOST}.vm` and a _gmail account_.
   * 1.5.2: Generate your own grub password as this repo has one only the author knows. See above.
@@ -67,12 +68,9 @@ make clean
 * Note that this software is provided as-is, and hardens an Ubuntu image built with Packer.  The recommendation is to comply with the above terms of use as they apply in your use case.
 * Running
 ```shell
-echo -e "GRUB_PASSWORD: ${GRUB_PASSWORD}\nGMAIL: $GMAIL\nHOST: $HOST\nDOMAIN: $DOMAIN\nREGION: $REGION\nREMOTELOGHOST: $REMOTELOGHOST\nS3_BUCKET: ${S3_BUCKET}\nAWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID\nAWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY\AWS_SESSION_TOKEN: $AWS_SESSION_TOKEN\nGMAILPASSWORD: $GMAILPASSWORD\nUBUNTUPASSWORD: $UBUNTUPASSWORD\n"
+echo -e "GRUB_PASSWORD: ${GRUB_PASSWORD}\nGMAIL: $GMAIL\nHOST: $HOST\nDOMAIN: $DOMAIN\nREGION: $REGION\nREMOTELOGHOST: $REMOTELOGHOST\nS3_BUCKET: ${S3_BUCKET}\nAWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID\nAWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY\nAWS_SESSION_TOKEN: $AWS_SESSION_TOKEN\nGMAILPASSWORD: $GMAILPASSWORD\nUBUNTUPASSWORD: $UBUNTUPASSWORD\n"
 ```
 might be convenient during development.
 * Certain environments require AWS_SESSION_TOKEN to be set such as your place of work, but although this needs to be set correctly for those environments to work, it is not specifically tested during the Packer run.
 * Put your site-specific base image unit test content in the `base_unit_test.sh` script which distributes as a nominal Internet connectivity test.
-
-## TODO
-* Rerun with REMOTELOGHOST instantiated and test logging works with Elastic cloud.
 

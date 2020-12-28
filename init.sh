@@ -77,7 +77,3 @@ then
   export UBUNTUPASSWORD=${UBUNTUPASSWORD}
   echo
 fi
-
-## As vars above are exported, need to trigger this here
-#
-./run.sh
