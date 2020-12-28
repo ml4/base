@@ -8,10 +8,10 @@
 #    # #    # #    # #         # #   ## #   #
 #####  #    #  ####  ######    # #    # #   #
 
-if [ -z $(echo ${GRUB_PASSWORD}) ]
+if [ -z $(echo ${GRUBPASSWORD}) ]
 then
-  read -sp "Enter value for GRUB_PASSWORD: " GRUB_PASSWORD
-  export GRUB_PASSWORD=${GRUB_PASSWORD}
+  read -sp "Enter value for GRUBPASSWORD: " GRUBPASSWORD
+  export GRUBPASSWORD=${GRUBPASSWORD}
   echo
 fi
 
@@ -64,16 +64,16 @@ then
   export AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
 fi
 
-if [ -z $(echo ${GMAIL_PASSWORD}) ]
+if [ -z $(echo ${GMAILPASSWORD}) ]
 then
-  read -sp "Enter value for GMAIL_PASSWORD: " GMAIL_PASSWORD
-  export GMAIL_PASSWORD=${GMAIL_PASSWORD}
+  read -sp "Enter value for GMAILPASSWORD: " GMAILPASSWORD
+  export GMAILPASSWORD=${GMAILPASSWORD}
   echo
 fi
 
-if [ -z $(echo ${UBUNTU_PASSWORD}) ]
+if [ -z $(echo ${UBUNTUPASSWORD}) ]
 then
-  read -sp "Enter value for UBUNTU_PASSWORD: " UBUNTU_PASSWORD
-  export UBUNTU_PASSWORD=${UBUNTU_PASSWORD}
+  read -sp "Enter value for UBUNTUPASSWORD: " UBUNTUPASSWORD
+  export UBUNTUPASSWORD=${UBUNTUPASSWORD}
   echo
 fi

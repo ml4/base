@@ -50,8 +50,21 @@
     },
     {
       "environment_vars": [
+        "GRUBPASSWORD={{user `grubPassword`}}",
         "GMAIL={{user `email`}}",
-        "GMAIL_PASSWORD={{user `emailPassword`}}"
+        "GMAILPASSWORD={{user `emailPassword`}}",
+        "REMOTELOGHOST={{user `remoteLogHost`}}",
+        "HOSTNAME={{user `hostname`}}",
+        "DOMAIN={{user `domain`}}"
+      ],
+      "execute_command": "echo '{{user `ubuntu_password`}}' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+      "script": "cis.sh",
+      "type": "shell"
+    },
+    {
+      "environment_vars": [
+        "GMAIL={{user `email`}}",
+        "GMAILPASSWORD={{user `emailPassword`}}"
       ],
       "execute_command": "echo '{{user `ubuntu_password`}}' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
       "script": "base-clean.sh",

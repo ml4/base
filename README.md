@@ -68,7 +68,7 @@ make clean
 * Note that this software is provided as-is, and hardens an Ubuntu image built with Packer.  The recommendation is to comply with the above terms of use as they apply in your use case.
 * Running
 ```shell
-echo -e "GRUB_PASSWORD: ${GRUB_PASSWORD}\nGMAIL: $GMAIL\nHOST: $HOST\nDOMAIN: $DOMAIN\nREGION: $REGION\nREMOTELOGHOST: $REMOTELOGHOST\nS3_BUCKET: ${S3_BUCKET}\nAWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID\nAWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY\nAWS_SESSION_TOKEN: $AWS_SESSION_TOKEN\nGMAIL_PASSWORD: $GMAIL_PASSWORD\nUBUNTU_PASSWORD: $UBUNTU_PASSWORD\n"
+echo -e "GRUBPASSWORD: ${GRUBPASSWORD}\nGMAIL: $GMAIL\nHOST: $HOST\nDOMAIN: $DOMAIN\nREGION: $REGION\nREMOTELOGHOST: $REMOTELOGHOST\nS3_BUCKET: ${S3_BUCKET}\nAWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID\nAWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY\nAWS_SESSION_TOKEN: $AWS_SESSION_TOKEN\nGMAILPASSWORD: $GMAILPASSWORD\nUBUNTUPASSWORD: $UBUNTUPASSWORD\n"
 ```
 might be convenient during development.
 * Certain environments require AWS_SESSION_TOKEN to be set such as your place of work, but although this needs to be set correctly for those environments to work, it is not specifically tested during the Packer run.

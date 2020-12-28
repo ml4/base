@@ -84,9 +84,9 @@ if [ -z "${GMAIL}" ]
 then
   handleExit "GMAIL variable unset" "1"
 fi
-if [ -z "${GMAIL_PASSWORD}" ]
+if [ -z "${GMAILPASSWORD}" ]
 then
-  handleExit "GMAIL_PASSWORD variable unset" "1"
+  handleExit "GMAILPASSWORD variable unset" "1"
 fi
 if [ -z "${REMOTELOGHOST}" ]
 then
@@ -233,12 +233,12 @@ fi
 
 if [[ -z $(sudo grep '^AuthPass=' /etc/ssmtp/ssmtp.conf) ]]
 then
-  log "INFO" "1.4.1: Appending AuthPass=<GMAIL_PASSWORD> to /etc/ssmtp/ssmtp.conf"
-  echo "AuthPass=%%GMAIL_PASSWORD%%" | sudo tee -a /etc/ssmtp/ssmtp.conf
-  sudo sed -i "s/AuthPass=%%GMAIL_PASSWORD%%/AuthPass=${GMAIL_PASSWORD}/" /etc/ssmtp/ssmtp.conf
+  log "INFO" "1.4.1: Appending AuthPass=<GMAILPASSWORD> to /etc/ssmtp/ssmtp.conf"
+  echo "AuthPass=%%GMAILPASSWORD%%" | sudo tee -a /etc/ssmtp/ssmtp.conf
+  sudo sed -i "s/AuthPass=%%GMAILPASSWORD%%/AuthPass=${GMAILPASSWORD}/" /etc/ssmtp/ssmtp.conf
 else
   log "INFO" "1.4.1: Amending AuthPass in /etc/ssmtp/ssmtp.conf"
-  sudo sed -i "s/^AuthPass=.*$/AuthPass=${GMAIL_PASSWORD}/" /etc/ssmtp/ssmtp.conf
+  sudo sed -i "s/^AuthPass=.*$/AuthPass=${GMAILPASSWORD}/" /etc/ssmtp/ssmtp.conf
 fi
 
 if [[ -z $(sudo grep '^UseSTARTTLS=' /etc/ssmtp/ssmtp.conf) ]]
@@ -277,7 +277,7 @@ log "INFO" "1.5.2: Running set password crypt on grub2 changes"
 echo 'cat <<EOF' | sudo tee -a /etc/grub.d/69_bootSecurity
 echo 'set superusers="root"' | sudo tee -a /etc/grub.d/69_bootSecurity
 #echo "password_pbkdf2 root grub.pbkdf2.sha512.10000.1405BE64EEFF70D3979367597E913DD7A9ABA878020C555BC93DE87C7090077B584F95F89175343A627D11A69B4E413EB824F436335191BA7301100514DF9D0B.ACD09665412D8682AFC28067158EB2B4717B664766C3FAB45F911044815B10B097E594E594353FEF93D344BF61AE48D7B01863E4953685A77FCC05ECD3A29B66" | sudo tee -a /etc/grub.d/69_bootSecurity
-echo "password_pbkdf2 root ${GRUB_PASSWORD}" | sudo tee -a /etc/grub.d/69_bootSecurity
+echo "password_pbkdf2 root ${GRUBPASSWORD}" | sudo tee -a /etc/grub.d/69_bootSecurity
 echo 'EOF' | sudo tee -a /etc/grub.d/69_bootSecurity
 logRun "1.5.2" "sudo chmod 0755 /etc/grub.d/69_bootSecurity"
 logRun "1.5.1-1.5.2" "sudo update-grub"
