@@ -1,5 +1,5 @@
 build:
-	@. init.sh
+	@./run.sh
 
 clean:
 	@echo "Remember to delete any test VMs/volumes/snapshots and SSH keypairs from AWS!"
