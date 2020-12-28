@@ -84,9 +84,9 @@ if [ -z "${GMAIL}" ]
 then
   handleExit "GMAIL variable unset" "1"
 fi
-if [ -z "${GMAILPASSWORD}" ]
+if [ -z "${GMAIL_PASSWORD}" ]
 then
-  handleExit "GMAILPASSWORD variable unset" "1"
+  handleExit "GMAIL_PASSWORD variable unset" "1"
 fi
 if [ -z "${REMOTELOGHOST}" ]
 then
@@ -233,12 +233,12 @@ fi
 
 if [[ -z $(sudo grep '^AuthPass=' /etc/ssmtp/ssmtp.conf) ]]
 then
-  log "INFO" "1.4.1: Appending AuthPass=<GMAILPASSWORD> to /etc/ssmtp/ssmtp.conf"
-  echo "AuthPass=%%GMAILPASSWORD%%" | sudo tee -a /etc/ssmtp/ssmtp.conf
-  sudo sed -i "s/AuthPass=%%GMAILPASSWORD%%/AuthPass=${GMAILPASSWORD}/" /etc/ssmtp/ssmtp.conf
+  log "INFO" "1.4.1: Appending AuthPass=<GMAIL_PASSWORD> to /etc/ssmtp/ssmtp.conf"
+  echo "AuthPass=%%GMAIL_PASSWORD%%" | sudo tee -a /etc/ssmtp/ssmtp.conf
+  sudo sed -i "s/AuthPass=%%GMAIL_PASSWORD%%/AuthPass=${GMAIL_PASSWORD}/" /etc/ssmtp/ssmtp.conf
 else
   log "INFO" "1.4.1: Amending AuthPass in /etc/ssmtp/ssmtp.conf"
-  sudo sed -i "s/^AuthPass=.*$/AuthPass=${GMAILPASSWORD}/" /etc/ssmtp/ssmtp.conf
+  sudo sed -i "s/^AuthPass=.*$/AuthPass=${GMAIL_PASSWORD}/" /etc/ssmtp/ssmtp.conf
 fi
 
 if [[ -z $(sudo grep '^UseSTARTTLS=' /etc/ssmtp/ssmtp.conf) ]]

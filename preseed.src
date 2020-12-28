@@ -111,8 +111,8 @@ d-i keyboard-configuration/modelcode string pc105
 # Create ubuntu user account weak password allowed to increase chance of build working - change later if required.
 d-i passwd/user-fullname string ubuntu
 d-i passwd/username string ubuntu
-d-i passwd/user-password password %%UBUNTUPASSWORD%%
-d-i passwd/user-password-again password %%UBUNTUPASSWORD%%
+d-i passwd/user-password password %%UBUNTU_PASSWORD%%
+d-i passwd/user-password-again password %%UBUNTU_PASSWORD%%
 d-i user-setup/allow-password-weak boolean true
 d-i user-setup/encrypt-home boolean false
 d-i passwd/user-default-groups ubuntu sudo

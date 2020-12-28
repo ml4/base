@@ -64,16 +64,16 @@ then
   export AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
 fi
 
-if [ -z $(echo ${GMAILPASSWORD}) ]
+if [ -z $(echo ${GMAIL_PASSWORD}) ]
 then
-  read -sp "Enter value for GMAILPASSWORD: " GMAILPASSWORD
-  export GMAILPASSWORD=${GMAILPASSWORD}
+  read -sp "Enter value for GMAIL_PASSWORD: " GMAIL_PASSWORD
+  export GMAIL_PASSWORD=${GMAIL_PASSWORD}
   echo
 fi
 
-if [ -z $(echo ${UBUNTUPASSWORD}) ]
+if [ -z $(echo ${UBUNTU_PASSWORD}) ]
 then
-  read -sp "Enter value for UBUNTUPASSWORD: " UBUNTUPASSWORD
-  export UBUNTUPASSWORD=${UBUNTUPASSWORD}
+  read -sp "Enter value for UBUNTU_PASSWORD: " UBUNTU_PASSWORD
+  export UBUNTU_PASSWORD=${UBUNTU_PASSWORD}
   echo
 fi

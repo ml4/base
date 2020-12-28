@@ -53,9 +53,9 @@ then
   exit 1
 fi
 
-if [[ -z "${GMAILPASSWORD}" ]]
+if [[ -z "${GMAIL_PASSWORD}" ]]
 then
-  log "ERROR" "GMAILPASSWORD is not set"
+  log "ERROR" "GMAIL_PASSWORD is not set"
   exit 1
 fi
 
@@ -83,9 +83,9 @@ then
   exit 1
 fi
 
-if [[ -z "${UBUNTUPASSWORD}" ]]
+if [[ -z "${UBUNTU_PASSWORD}" ]]
 then
-  log "ERROR" "UBUNTUPASSWORD is not set"
+  log "ERROR" "UBUNTU_PASSWORD is not set"
   exit 1
 fi
 
@@ -145,13 +145,13 @@ fi
 
 ## MAIN CALL
 #
-cat preseed.src | sed "s/%%UBUNTUPASSWORD%%/${UBUNTUPASSWORD}/g" > preseed.cfg
-packer build -var=email=${GRUB_PASSWORD} -var=email=${GMAIL} -var=emailPassword=${GMAILPASSWORD} \
+cat preseed.src | sed "s/%%UBUNTU_PASSWORD%%/${UBUNTU_PASSWORD}/g" > preseed.cfg
+packer build -var=email=${GRUB_PASSWORD} -var=email=${GMAIL} -var=emailPassword=${GMAIL_PASSWORD} \
               -var=remoteLogHost=${HOST}.${DOMAIN} -var=hostname=${HOST} \
               -var=domain=${DOMAIN} -var=aws_access_key_id=${AWS_ACCESS_KEY_ID} \
               -var=aws_secret_access_key=${AWS_SECRET_ACCESS_KEY} \
               -var=aws_session_token=${AWS_SESSION_TOKEN} \
-              -var=s3_bucket=${S3_BUCKET} -var=region=${REGION} -var=ubuntu_password=${UBUNTUPASSWORD} base.json && rm preseed.cfg role-policy.json 2>/dev/null
+              -var=s3_bucket=${S3_BUCKET} -var=region=${REGION} -var=ubuntu_password=${UBUNTU_PASSWORD} base.json && rm preseed.cfg role-policy.json 2>/dev/null
 
 
 if [[ -f preseed.cfg ]]
