@@ -38,7 +38,7 @@ function log {
     COL=${bldylw}
   fi
   local -r message="$2"
-  >&2 echo -e "[${COL}${level}${txtrst}] ${message}"
+  >&2 echo -e "${bldwht}[${COL}${level}${bldwht}] ${message}"
 }
 
 
@@ -1094,12 +1094,12 @@ do
   then
     log "INFO" "5.2.x: Setting sshd ${key} to ${val}"
     sudo sed -i "s/^${key}.*$/${key} ${val}/" /etc/ssh/sshd_config
-  elif [[ $(sudo grep -e "^#${KEY} /etc/ssh/sshd_config") ]]
+  elif [[ $(sudo grep -e "^#${KEY}" /etc/ssh/sshd_config) ]]
   then
     log "INFO" "5.2.x: Uncommenting and setting sshd ${key} to ${val}"
     sudo sed -i "s/^#${key}.*$/${key} ${val}/" /etc/ssh/sshd_config
   else
-    log "INFO" "Appending ${key} ${val} to /etc/ssh/sshd_config"
+    log "INFO" "5.2.x: Appending ${key} ${val} to /etc/ssh/sshd_config"
     echo "${key} ${val}" | sudo tee -a /etc/ssh/sshd_config
   fi
 done
