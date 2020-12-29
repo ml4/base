@@ -164,6 +164,11 @@ else
 fi
 
 LATESTBASE=$(aws ec2 describe-images --owners self --region ${REGION} --query "sort_by(Images, &CreationDate)[-1].[ImageId]" --filters "Name=name,Values=base" --output text)
+if [[ -z ${LATESTBASE} ]]
+then
+  log "ERROR" "Cannot find base AMI in region ${REGION}"
+  exit 1
+fi
 echo
 log "INFO" "ABOUT TO TEST AMI: ${LATESTBASE}"
 echo
@@ -267,7 +272,7 @@ if [[ ${IMAGENUM} > 1 ]]
 then
   for AMI in $(aws ec2 describe-images --owners self --region ${REGION} --query "sort_by(Images, &CreationDate)" --filters "Name=name,Values=base" --output json | grep ImageId | head -$(( IMAGENUM -= 1 )) | awk -F '"' '{print $4}')
   do
-    SNAP=$(aws ec2 describe-snapshots --owner-ids self --region eu-west-1 --output text | grep ${AMI} | awk -F'\t' '{print $6}')
+    SNAP=$(aws ec2 describe-snapshots --owner-ids self --region ${REGION} --output text | grep ${AMI} | awk -F'\t' '{print $6}')
     log "INFO" "Running aws ec2 deregister-image --image-id ${AMI} --region ${REGION} && aws ec2 delete-snapshot --snapshot-id ${SNAP} --region ${REGION}"
     aws ec2 deregister-image --image-id ${AMI} --region ${REGION} && aws ec2 delete-snapshot --snapshot-id ${SNAP} --region ${REGION}
     rCode=${?}
