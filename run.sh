@@ -260,7 +260,7 @@ terraform destroy -auto-approve -compact-warnings
 rCode=${?}
 if [ ${rCode} -gt 0 ]
 then
-  echo "ERROR running terraform destroy"
+  log "ERROR" "Problem running terraform destroy"
   exit 1
 fi
 
@@ -272,13 +272,22 @@ if [[ ${IMAGENUM} > 1 ]]
 then
   for AMI in $(aws ec2 describe-images --owners self --region ${REGION} --query "sort_by(Images, &CreationDate)" --filters "Name=name,Values=base" --output json | grep ImageId | head -$(( IMAGENUM -= 1 )) | awk -F '"' '{print $4}')
   do
-    SNAP=$(aws ec2 describe-snapshots --owner-ids self --region ${REGION} --output text | grep ${AMI} | awk -F'\t' '{print $6}')
-    log "INFO" "Running aws ec2 deregister-image --image-id ${AMI} --region ${REGION} && aws ec2 delete-snapshot --snapshot-id ${SNAP} --region ${REGION}"
-    aws ec2 deregister-image --image-id ${AMI} --region ${REGION} && aws ec2 delete-snapshot --snapshot-id ${SNAP} --region ${REGION}
+    SNAP=$(aws ec2 describe-images --owners self --region ${REGION} --query "sort_by(Images, &CreationDate)"  --filters "Name=image-id,Values=${AMI}" --output json | jq '.[0].BlockDeviceMappings[0].Ebs.SnapshotId' | tr -d '"')
+    log "INFO" "Snapshot for ID for AMI ${AMI}: ${SNAP}"
+    log "INFO" "Running aws ec2 deregister-image --image-id ${AMI} --region ${REGION}"
+    aws ec2 deregister-image --image-id ${AMI} --region ${REGION}
+    rCode=${?}
+    if [ ${rCode} -gt 0 ]
+    then
+      log "ERROR" "Problem running aws ec2 deregister-image command"
+      exit 1
+    fi
+    log "INFO" "Running aws ec2 delete-snapshot --snapshot-id ${SNAP} --region ${REGION}"
+    aws ec2 delete-snapshot --snapshot-id ${SNAP} --region ${REGION}
     rCode=${?}
     if [[ ${rCode} > 0 ]]
     then
-      log "WARNING" "return status greater than zero for command aws ec2 deregister-image --image-id |${AMI}| --region |${REGION}|"
+      log "ERROR" "return status greater than zero for command aws ec2 delete-snapshot --snapshot-id |${SNAP}| --region |${REGION}|"
       exit 1
     fi
   done
