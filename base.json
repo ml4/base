@@ -41,16 +41,6 @@
   ],
   "provisioners": [
     {
-      "source": "hcDL.sh",
-      "destination": "/tmp/hcDL.sh",
-      "type": "file"
-    },
-    {
-      "execute_command": "echo '{{user `ubuntu_password`}}' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
-      "inline": ["mv -f /tmp/hcDL.sh /usr/local/bin"],
-      "type": "shell"
-    },
-    {
       "environment_vars": [
         "GMAIL={{user `email`}}"
       ],
