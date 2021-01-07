@@ -16,22 +16,22 @@ provider "aws" {
   region = "%%REGION%%"
 }
 
-resource "aws_key_pair" "base_unit_test_key" {
-	key_name = "base_unit_test_key"
-	public_key = file("./base_unit_test_key.pub")
+resource "aws_key_pair" "baseUnitTestKey" {
+	key_name = "baseUnitTestKey"
+	public_key = file("./baseUnitTestKey.pub")
 }
 
-resource "aws_instance" "base_unit_test" {
+resource "aws_instance" "baseUnitTest" {
   ami           = "%%LATESTBASE%%"
   instance_type = "t2.micro"
-  key_name      = "base_unit_test_key"
-  user_data     = file("base_unit_test.sh")
+  key_name      = "baseUnitTestKey"
+  user_data     = file("baseUnitTest.sh")
 
   tags = {
-    Name = "base_unit_test"
+    Name = "baseUnitTest"
   }
 }
 
-output "base_unit_test_instance_id" {
-  value = aws_instance.base_unit_test.id
+output "ut-ai-simpleUnitTest-ai-ai_instance_id" {
+  value = aws_instance.baseUnitTest.id
 }

@@ -45,7 +45,7 @@
         "GMAIL={{user `email`}}"
       ],
       "execute_command": "echo '{{user `ubuntu_password`}}' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
-      "script": "base-init.sh",
+      "script": "baseInit.sh",
       "type": "shell"
     },
     {
@@ -67,7 +67,17 @@
         "GMAILPASSWORD={{user `emailPassword`}}"
       ],
       "execute_command": "echo '{{user `ubuntu_password`}}' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
-      "script": "base-clean.sh",
+      "script": "baseClean.sh",
+      "type": "shell"
+    },
+    {
+      "source": "installHC.sh",
+      "destination": "/tmp/installHC.sh",
+      "type": "file"
+    },
+    {
+      "execute_command": "echo '{{user `ubuntu_password`}}' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+      "inline": ["mv -f /tmp/installHC.sh /usr/local/bin"],
       "type": "shell"
     }
   ],

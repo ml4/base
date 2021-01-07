@@ -72,6 +72,6 @@ echo -e "GRUBPASSWORD: ${GRUBPASSWORD}\nGMAIL: $GMAIL\nHOST: $HOST\nDOMAIN: $DOM
 ```
 might be convenient during development.
 * Certain environments require AWS_SESSION_TOKEN to be set such as your place of work, but although this needs to be set correctly for those environments to work, it is not specifically tested during the Packer run.
-* Put your site-specific base image unit test content in the `base_unit_test.sh` script which distributes as a nominal Internet connectivity test.
+* Put your site-specific base image unit test content in the `baseUnitTest.sh` script which distributes as a nominal Internet connectivity test.
 
 
