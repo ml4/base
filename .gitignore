@@ -20,7 +20,7 @@ cisAssets/*
 preseed.cfg
 role-policy.json
 *.tfstate*
-base_unit_test_key*
+baseUnitTestKey*
 .terraform
-main.tf
+baseUnitTest.tf
 

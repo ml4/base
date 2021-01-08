@@ -97,9 +97,9 @@ then
   rCode=${?}
   if [[ ${rCode} -gt 0 ]]
   then
-    cat role-policy.src | sed "s/%%S3_BUCKET%%/${S3_BUCKET}/g" > role-policy.json
-    aws iam create-role --role-name vmimport --assume-role-policy-document file://trust-policy.json
-    aws iam put-role-policy --role-name vmimport --policy-name vmimport --policy-document file://role-policy.json
+    cat rolePolicy.src | sed "s/%%S3_BUCKET%%/${S3_BUCKET}/g" > rolePolicy.json
+    aws iam create-role --role-name vmimport --assume-role-policy-document file://trustPolicy.json
+    aws iam put-role-policy --role-name vmimport --policy-name vmimport --policy-document file://rolePolicy.json
   fi
 else
   log "ERROR" "S3_BUCKET is not set"
@@ -131,11 +131,11 @@ then
 fi
 
 log "INFO" "Creating temporary SSH key pair"
-if [[ -r "./base_unit_test_key" && "./base_unit_test_key.pub" ]]
+if [[ -r "./baseUnitTestKey" && "./baseUnitTestKey.pub" ]]
 then
-  log "INFO" "Found base_unit_test_key pair - using"
+  log "INFO" "Found baseUnitTestKey pair - using"
 else
-    ssh-keygen -t rsa -b 4096 -N "" -C "base_unit_test_key" -f base_unit_test_key
+    ssh-keygen -t rsa -b 4096 -N "" -C "baseUnitTestKey" -f baseUnitTestKey
 fi
 rCode=${?}
 if [ ${rCode} -gt 0 ]
@@ -172,7 +172,7 @@ fi
 echo
 log "INFO" "ABOUT TO TEST AMI: ${LATESTBASE}"
 echo
-sed "s/%%LATESTBASE%%/${LATESTBASE}/; s/%%REGION%%/${REGION}/" main.src > main.tf
+sed "s/%%LATESTBASE%%/${LATESTBASE}/; s/%%REGION%%/${REGION}/" baseUnitTest.src | tee -a baseUnitTest.tf
 
 ## terraform unit test
 #
@@ -195,7 +195,7 @@ fi
 ## sleep for instance OK
 ## aws ec2 wait instance-status-ok --instance-ids appears to timeout
 #
-INSTANCEID=$(terraform output | grep base_unit_test_instance_id | awk '{print $NF}' | tr -d '"')
+INSTANCEID=$(terraform output | grep ut-ai-simpleUnitTest-ai-ai-baseUnitTest-id | awk '{print $NF}' | tr -d '"')
 log "INFO" "Unit test instance ID harvested as: ${INSTANCEID}; Polling:"
 echo -n "Waiting for instance to come up"
 if [[ -n ${INSTANCEID} ]]
@@ -247,11 +247,11 @@ then
   exit 1
 fi
 
-log "INFO" "Getting test result with: ssh -i base_unit_test_key ubuntu@${INSTANCEIP} 'cat /var/tmp/base_unit_test'"
-RESULT=$(ssh -i base_unit_test_key ubuntu@${INSTANCEIP} "cat /var/tmp/base_unit_test" 2>/dev/null)
+log "INFO" "Getting test result with: ssh -i baseUnitTestKey ubuntu@${INSTANCEIP} 'cat /var/tmp/baseUnitTest'"
+RESULT=$(ssh -i baseUnitTestKey ubuntu@${INSTANCEIP} "cat /var/tmp/baseUnitTest" 2>/dev/null)
 if [[ -z ${RESULT} ]]
 then
-  log "ERROR" "Return status greater than zero for command ssh -i base_unit_test_key ubuntu@${INSTANCEIP} 'cat /var/tmp/base_unit_test'"
+  log "ERROR" "Return status greater than zero for command ssh -i baseUnitTestKey ubuntu@${INSTANCEIP} 'cat /var/tmp/baseUnitTest'"
   exit 1
 fi
 
@@ -295,7 +295,7 @@ fi
 
 ## tidy up, leave packer_cache
 #
-rm -rf main.tf base_unit_test_key base_unit_test_key.pub terraform.tfstate terraform.tfstate.backup .terraform
+rm -rf baseUnitTest.tf baseUnitTestKey baseUnitTestKey.pub terraform.tfstate terraform.tfstate.backup .terraform
 
 ## output result
 #

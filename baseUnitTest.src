@@ -32,6 +32,6 @@ resource "aws_instance" "baseUnitTest" {
   }
 }
 
-output "ut-ai-simpleUnitTest-ai-ai_instance_id" {
+output "ut-ai-simpleUnitTest-ai-ai-baseUnitTest-id" {
   value = aws_instance.baseUnitTest.id
 }
