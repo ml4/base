@@ -14,8 +14,6 @@
 #    # #    # #    # #         #   #  #    # #   ##
 #####  #    #  ####  ######    #    #  ####  #    #
 
-RED='\033[0;31m'
-
 function log {
   bldred='\033[0;31m' # Red
   bldgrn='\033[1;32m' # Green
@@ -40,7 +38,6 @@ function log {
   local -r message="$2"
   >&2 echo -e "${bldwht}[${COL}${level}${bldwht}] ${message}"
 }
-
 
 if [[ -z "$(command -v packer)" ]]
 then
@@ -172,7 +169,14 @@ fi
 echo
 log "INFO" "ABOUT TO TEST AMI: ${LATESTBASE}"
 echo
-sed "s/%%LATESTBASE%%/${LATESTBASE}/; s/%%REGION%%/${REGION}/" baseUnitTest.src | tee -a baseUnitTest.tf
+touch baseUnitTest.tf
+sed "s/%%LATESTBASE%%/${LATESTBASE}/; s/%%REGION%%/${REGION}/" baseUnitTest.src | tee baseUnitTest.tf
+rCode=${?}
+if [[ ${rCode} -gt 0 ]]
+then
+  log "ERROR" "Problem running sed on baseUnitTest.src"
+  exit 1
+fi
 
 ## terraform unit test
 #
@@ -249,9 +253,11 @@ fi
 
 log "INFO" "Getting test result with: ssh -i baseUnitTestKey ubuntu@${INSTANCEIP} 'cat /var/tmp/baseUnitTest'"
 RESULT=$(ssh -i baseUnitTestKey ubuntu@${INSTANCEIP} "cat /var/tmp/baseUnitTest" 2>/dev/null)
-if [[ -z ${RESULT} ]]
+rCode=${?}
+if [[ ${rCode} > 0 ]]
 then
   log "ERROR" "Return status greater than zero for command ssh -i baseUnitTestKey ubuntu@${INSTANCEIP} 'cat /var/tmp/baseUnitTest'"
+  terraform destroy -auto-approve -compact-warnings
   exit 1
 fi
 
@@ -295,7 +301,12 @@ fi
 
 ## tidy up, leave packer_cache
 #
-rm -rf baseUnitTest.tf baseUnitTestKey baseUnitTestKey.pub terraform.tfstate terraform.tfstate.backup .terraform
+rm -rf baseUnitTest.tf baseUnitTestKey baseUnitTestKey.pub terraform.tfstate* .terraform
+rCode=${?}
+if [ ${rCode} -gt 0 ]
+then
+  log "WARN" "Problem running rm -rf baseUnitTest.tf baseUnitTestKey baseUnitTestKey.pub terraform.tfstate* .terraform"
+fi
 
 ## output result
 #
