@@ -273,6 +273,16 @@ EOF
     else
       log "INFO" "OK: sudo chown --recursive ${tool}:${tool} /opt/${tool}"
     fi
+
+    sudo ln -s /opt/${tool}/bin/${tool} /usr/local/bin/${tool}
+    rCode=${?}
+    if [[ ${rCode} -gt 0 ]]
+    then
+      log "ERROR" "Failed to sudo ln -s /opt/${tool}/bin/${tool} /usr/local/bin/${tool}"
+      exit ${rCode}
+    else
+      log "INFO" "OK: sudo ln -s /opt/${tool}/bin/${tool} /usr/local/bin/${tool}"
+    fi
   fi
 }
 
@@ -447,17 +457,18 @@ log "INFO" "Version: ${version}"
 log "INFO" "Setting debconf set selections up"
 echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections
 
-if [[ -n "${local_only}" ]]
+if [[ -z "${local_only}" ]]
 then
-  log "INFO" "LOCAL ONLY MODE - DOWNLOADING BINARY TO ${pwd} ONLY"
   install_dependencies
   create_user ${tool}
   create_install_paths ${tool}
+else
+  log "INFO" "LOCAL ONLY MODE - DOWNLOADING BINARY TO ONLY; NO DEPS, USERS OR PATHS CREATED"
 fi
 
-install_binaries ${tool} "${version}"
+install_binaries "${tool}" "${version}"
 
-if [[ -n "${local_only}" ]]
+if [[ -z "${local_only}" ]]
 then
   if [[ "${tool}" == "consul" ]]
   then

@@ -41,7 +41,6 @@ function log {
   >&2 echo -e "${bldwht}[${COL}${level}${bldwht}] ${message}"
 }
 
-
 ## Process stdout/err handling
 ## https://intoli.com/blog/exit-on-errors-in-bash-scripts/
 ## https://stackoverflow.com/questions/3684212/using-strftime-function-in-mawk
