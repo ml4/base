@@ -57,12 +57,12 @@ function install_dependencies {
   sudo apt-get --quiet --assume-yes upgrade
   sudo apt-get --quiet --assume-yes dist-upgrade
   sudo apt-get --quiet --assume-yes autoremove
-  sudo apt-get --quiet --assume-yes install curl unzip jq net-tools docker.io
+  sudo apt-get --quiet --assume-yes install curl unzip jq net-tools
 
   # Install CNI
-  curl -sSL -o /tmp/cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.8.6/cni-plugins-linux-amd64-v0.8.6.tgz
-  sudo mkdir -p /opt/cni/bin
-  sudo tar -C /opt/cni/bin -xzf /tmp/cni-plugins.tgz
+  # curl -sSL -o /tmp/cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.8.6/cni-plugins-linux-amd64-v0.8.6.tgz
+  # sudo mkdir -p /opt/cni/bin
+  # sudo tar -C /opt/cni/bin -xzf /tmp/cni-plugins.tgz
 
   log "INFO" "Dependancies Installed"
 }
@@ -279,6 +279,12 @@ EOF
 function install_dnsmasq {
   log "INFO" "Installing Dnsmasq and ResolvConf"
   sudo apt-get --quiet --assume-yes install dnsmasq resolvconf
+  rCode=${?}
+  if [[ ${rCode} > 0 ]]
+  then
+    echo "ERROR: Return status greater than zero for command Dnsmasq and ResolvConf"
+    exit ${rCode}
+  fi
 }
 
 function configure_dnsmasq_resolv {
@@ -441,7 +447,7 @@ log "INFO" "Version: ${version}"
 log "INFO" "Setting debconf set selections up"
 echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections
 
-if [[ -z "${local_only}" ]]
+if [[ -n "${local_only}" ]]
 then
   log "INFO" "LOCAL ONLY MODE - DOWNLOADING BINARY TO ${pwd} ONLY"
   install_dependencies
@@ -451,7 +457,7 @@ fi
 
 install_binaries ${tool} "${version}"
 
-if [[ -z "${local_only}" ]]
+if [[ -n "${local_only}" ]]
 then
   if [[ "${tool}" == "consul" ]]
   then
