@@ -43,7 +43,7 @@ make
 * The `run.sh` will delete all but the latest AMI in your account with the tag name `base` and their corresponding snapshots.  Read the code.
 
 ## Notes
-* The build should take ~40 mminutes mostly due to the import process to AWS and copying the AMI into the chosen region.  Multi-region copies are not currently supported, but are penned for dev.
+* The build should take ~40 minutes mostly due to the import process to AWS and copying the AMI into the chosen region.  Multi-region copies are not currently supported, but are penned for dev.
 * For abortive builds use the below, ensuring to destroy an errored Packer-created VMs and SSH public keys on the cloud:
 ```shell
 make clean
@@ -51,10 +51,10 @@ make clean
 * Running the above build means the Ubuntu default user password used will be on your file system only during the build.
 * Once you have your base, differentiate it with equivalent Packer build pipelines to create AMIs for all your favourite toys and stacks and make them trigger when this one succeeds.  Bear in mind the `%%PHOENIX%%` replacement in the Phoenix builds (see below).
 * Default locale is GB in `preseed.src`.
-* I build a root disk with 60Gb - update `preseed.src` if needed.
+* I build a 60Gb root disk - update `preseed.src` if needed.
 * This build is currently designed to operate one-way on a new default distribution of Ubuntu 18, and is not idempotent due to CIS implementation conveniences.
 * The `preseed.src` file includes `gawk` which supercedes `mawk` as it has `strftime`, and is required by the `cis.sh` script.
-* The default user on board is `ubuntu`, not `vagrant` which means a `vagrant up` will fail the login step and will have to be interrupted. A normal `ssh` should succeed on the command line specifying the correct user.
+* The default user on board is `ubuntu`, not `vagrant` which means a `vagrant up` will fail the login step and will have to be interrupted. Running `ssh -p 2222 ubuntu@localhost` should succeed after `vagrant up`.
 * Other notes pertaining to the CIS v2.0.1 Ubuntu CIS benchmarking document:
   * 1.3.1: This config sets up `sSMTP` in order for `aide` to be able to send email requires a hostname which defaults to `${HOST}.vm` and a _gmail account_.
   * 1.5.2: Generate your own grub password as this repo has one only the author knows. See above.
@@ -71,7 +71,7 @@ make clean
 echo -e "GRUBPASSWORD: ${GRUBPASSWORD}\nGMAIL: $GMAIL\nHOST: $HOST\nDOMAIN: $DOMAIN\nREGION: $REGION\nREMOTELOGHOST: $REMOTELOGHOST\nS3_BUCKET: ${S3_BUCKET}\nAWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID\nAWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY\nAWS_SESSION_TOKEN: $AWS_SESSION_TOKEN\nGMAILPASSWORD: $GMAILPASSWORD\nUBUNTUPASSWORD: $UBUNTUPASSWORD\n"
 ```
 might be convenient during development.
-* Certain environments require AWS_SESSION_TOKEN to be set such as your place of work, but although this needs to be set correctly for those environments to work, it is not specifically tested during the Packer run.
+* Certain environments require `AWS_SESSION_TOKEN` to be set such as your place of work, but although this needs to be set correctly for those environments to work, it is not specifically tested during the Packer run.
 * Put your site-specific base image unit test content in the `baseUnitTest.sh` script which distributes as a nominal Internet connectivity test.
 
 
