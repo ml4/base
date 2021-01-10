@@ -57,12 +57,12 @@ function install_dependencies {
   sudo apt-get --quiet --assume-yes upgrade
   sudo apt-get --quiet --assume-yes dist-upgrade
   sudo apt-get --quiet --assume-yes autoremove
-  sudo apt-get --quiet --assume-yes install curl unzip jq net-tools
+  sudo apt-get --quiet --assume-yes install curl unzip jq net-tools docker.io
 
   # Install CNI
-  # curl -sSL -o /tmp/cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.8.6/cni-plugins-linux-amd64-v0.8.6.tgz
-  # sudo mkdir -p /opt/cni/bin
-  # sudo tar -C /opt/cni/bin -xzf /tmp/cni-plugins.tgz
+  curl -sSL -o /tmp/cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.8.6/cni-plugins-linux-amd64-v0.8.6.tgz
+  sudo mkdir -p /opt/cni/bin
+  sudo tar -C /opt/cni/bin -xzf /tmp/cni-plugins.tgz
 
   log "INFO" "Dependancies Installed"
 }
@@ -273,28 +273,12 @@ EOF
     else
       log "INFO" "OK: sudo chown --recursive ${tool}:${tool} /opt/${tool}"
     fi
-
-    sudo ln -s /opt/${tool}/bin/${tool} /usr/local/bin/${tool}
-    rCode=${?}
-    if [[ ${rCode} -gt 0 ]]
-    then
-      log "ERROR" "Failed to sudo ln -s /opt/${tool}/bin/${tool} /usr/local/bin/${tool}"
-      exit ${rCode}
-    else
-      log "INFO" "OK: sudo ln -s /opt/${tool}/bin/${tool} /usr/local/bin/${tool}"
-    fi
   fi
 }
 
 function install_dnsmasq {
   log "INFO" "Installing Dnsmasq and ResolvConf"
   sudo apt-get --quiet --assume-yes install dnsmasq resolvconf
-  rCode=${?}
-  if [[ ${rCode} > 0 ]]
-  then
-    echo "ERROR: Return status greater than zero for command Dnsmasq and ResolvConf"
-    exit ${rCode}
-  fi
 }
 
 function configure_dnsmasq_resolv {
@@ -459,21 +443,20 @@ echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selecti
 
 if [[ -z "${local_only}" ]]
 then
+  log "INFO" "LOCAL ONLY MODE - DOWNLOADING BINARY TO ${pwd} ONLY"
   install_dependencies
   create_user ${tool}
   create_install_paths ${tool}
-else
-  log "INFO" "LOCAL ONLY MODE - DOWNLOADING BINARY TO ONLY; NO DEPS, USERS OR PATHS CREATED"
 fi
 
-install_binaries "${tool}" "${version}"
+install_binaries ${tool} "${version}"
 
 if [[ -z "${local_only}" ]]
 then
   if [[ "${tool}" == "consul" ]]
   then
-    install_dnsmasq
-    configure_dnsmasq_resolv
+    # install_dnsmasq # even without attempt to install resolvconf, presumably dnsmasq was trying a /tmp exec
+    # configure_dnsmasq_resolv
     # install_envoy # was not working from https://www.getenvoy.io/install/envoy/ubuntu/ on 2020-01-06
   fi
   create_service ${tool}
