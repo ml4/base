@@ -453,12 +453,12 @@ install_binaries ${tool} "${version}"
 
 if [[ -z "${local_only}" ]]
 then
-  if [[ "${tool}" == "consul" ]]
-  then
-    # install_dnsmasq # even without attempt to install resolvconf, presumably dnsmasq was trying a /tmp exec
-    # configure_dnsmasq_resolv
-    # install_envoy # was not working from https://www.getenvoy.io/install/envoy/ubuntu/ on 2020-01-06
-  fi
+  # if [[ "${tool}" == "consul" ]]
+  # then
+  #   install_dnsmasq # even without attempt to install resolvconf, presumably dnsmasq was trying a /tmp exec
+  #   configure_dnsmasq_resolv
+  #   install_envoy # was not working from https://www.getenvoy.io/install/envoy/ubuntu/ on 2020-01-06
+  # fi
   create_service ${tool}
 fi
 
