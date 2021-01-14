@@ -8,10 +8,10 @@
 #    # #    # #    # #         # #   ## #   #
 #####  #    #  ####  ######    # #    # #   #
 
-if [ -z $(echo ${GRUBPASSWORD}) ]
+if [ -z $(echo ${GRUB_PASSWORD}) ]
 then
-  read -sp "Enter value for GRUBPASSWORD: " GRUBPASSWORD
-  export GRUBPASSWORD=${GRUBPASSWORD}
+  read -sp "Enter value for GRUB_PASSWORD: " GRUB_PASSWORD
+  export GRUB_PASSWORD=${GRUB_PASSWORD}
   echo
 fi
 

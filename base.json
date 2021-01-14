@@ -50,7 +50,7 @@
     },
     {
       "environment_vars": [
-        "GRUBPASSWORD={{user `grubPassword`}}",
+        "GRUB_PASSWORD={{user `grubPassword`}}",
         "GMAIL={{user `email`}}",
         "GMAILPASSWORD={{user `emailPassword`}}",
         "REMOTELOGHOST={{user `remoteLogHost`}}",

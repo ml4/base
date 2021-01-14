@@ -144,7 +144,7 @@ fi
 ## MAIN CALL
 #
 cat preseed.src | sed "s/%%UBUNTUPASSWORD%%/${UBUNTUPASSWORD}/g" > preseed.cfg
-packer build -var=email=${GRUBPASSWORD} -var=email=${GMAIL} -var=emailPassword=${GMAILPASSWORD} \
+packer build -var=email=${GRUB_PASSWORD} -var=email=${GMAIL} -var=emailPassword=${GMAILPASSWORD} \
               -var=remoteLogHost=${HOST}.${DOMAIN} -var=hostname=${HOST} \
               -var=domain=${DOMAIN} -var=aws_access_key_id=${AWS_ACCESS_KEY_ID} \
               -var=aws_secret_access_key=${AWS_SECRET_ACCESS_KEY} \
