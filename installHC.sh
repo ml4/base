@@ -441,7 +441,7 @@ log "INFO" "Version: ${version}"
 log "INFO" "Setting debconf set selections up"
 echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections
 
-if [[ -z "${local_only}" ]]
+if [[ -n "${local_only}" ]]
 then
   log "INFO" "LOCAL ONLY MODE - DOWNLOADING BINARY TO ${pwd} ONLY"
   install_dependencies
@@ -451,7 +451,7 @@ fi
 
 install_binaries ${tool} "${version}"
 
-if [[ -z "${local_only}" ]]
+if [[ -n "${local_only}" ]]
 then
   # if [[ "${tool}" == "consul" ]]
   # then
