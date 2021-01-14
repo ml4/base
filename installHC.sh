@@ -57,7 +57,7 @@ function install_dependencies {
   sudo apt-get --quiet --assume-yes upgrade
   sudo apt-get --quiet --assume-yes dist-upgrade
   sudo apt-get --quiet --assume-yes autoremove
-  sudo apt-get --quiet --assume-yes install curl unzip jq net-tools docker.io
+  sudo apt-get --quiet --assume-yes install curl unzip jq net-tools
 
   # Install CNI
   curl -sSL -o /tmp/cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.8.6/cni-plugins-linux-amd64-v0.8.6.tgz
