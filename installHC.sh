@@ -9,7 +9,7 @@
 #
 #############################################################################################################################
 
-set -Eo pipefail
+set -euo pipefail
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -52,14 +52,15 @@ function log {
 ## next few I found in @methridge 2020-01-01ish
 #
 function install_dependencies {
-  log "INFO" "Installing dependencies"
+  log "INFO" "Installing dependencies: apt-get update upgrade dist-upgrade autoremove"
   sudo apt-get --quiet --assume-yes update
   sudo apt-get --quiet --assume-yes upgrade
   sudo apt-get --quiet --assume-yes dist-upgrade
   sudo apt-get --quiet --assume-yes autoremove
+  log "INFO" "sudo apt-get --quiet --assume-yes install curl unzip jq net-tools"
   sudo apt-get --quiet --assume-yes install curl unzip jq net-tools
 
-  # Install CNI
+  log "INFO" "Installing CNI plugins"
   curl -sSL -o /tmp/cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.8.6/cni-plugins-linux-amd64-v0.8.6.tgz
   sudo mkdir -p /opt/cni/bin
   sudo tar -C /opt/cni/bin -xzf /tmp/cni-plugins.tgz
@@ -85,11 +86,32 @@ function create_user {
 function create_install_paths {
   local -r tool="$1"
   log "INFO" "Creating install dirs for ${tool}"
+
+  ## deployment guides - Jan 2021
+  #
+  ## consul
+  #
+  ## /usr/bin       = binary
+  ## /opt/consul    = data
+  ## /etc/consul.d  = cfg, tls cert/key
+  #
+  ## nomad
+  #
+  ## /usr/local/bin = binary
+  ## /opt/nomad     = data
+  ## /etc/nomad.d   = cfg, tls cert/key
+  #
+  ## vault
+  #
+  ## /usr/local/bin = binary
+  ## /etc/vault.d   = cfg, tls cert/key
+  #
+  ## Sounds like /usr/bin for Consul is to match FHS and packaging efforts
+  ## so I will use /usr/bin for all tools and pressure the team to snap into line.
+  ## As /usr/bin has to be present, create only data and cfg dirs
+  #
+  sudo mkdir --parents /opt/${tool}
   sudo mkdir --parents /etc/${tool}.d
-  sudo mkdir --parents /opt/${tool}/bin
-  sudo mkdir --parents /opt/${tool}/data
-  sudo mkdir --parents /opt/${tool}/log
-  sudo mkdir --parents /opt/${tool}/tls
 }
 
 ## remove ent/prem capability while knitting into AWS pipeline
@@ -138,12 +160,6 @@ qHV5VVCoEIoYVHIuFIyFu1lIcei53VD6V690rmn0bp4A5hs+kErhThvkok3c
 -----END PGP PUBLIC KEY BLOCK-----
 EOF
     gpg --import /tmp/hashicorp.asc
-    rCode=${?}
-    if [[ ${rCode} -gt 0 ]]
-    then
-      log "ERROR" "Importing of HashiCorp GPG key failed. stopping here."
-      exit ${rCode}
-    fi
     rm -f /tmp/hashicorp.asc
   else
     log "INFO" "Already got HashiCorp key in your keyring"
@@ -155,63 +171,22 @@ EOF
   rm -f ${tool}_${version}_${platform}.zip 2>/dev/null
   log "INFO" "Getting https://releases.hashicorp.com/${tool}/${version}/${tool}_${version}_${platform}.zip"
   curl -#Ok https://releases.hashicorp.com/${tool}/${version}/${tool}_${version}_${platform}.zip
-  rCode=${?}
-  if [[ $rCode -gt 0 ]]
-  then
-    log "ERROR" "Failed to download https://releases.hashicorp.com/${tool}/${version}/${tool}_${version}_${platform}.zip"
-    exit ${rCode}
-  fi
   rm -f ${tool}_${version}_SHA256SUMS 2>/dev/null
+
   log "INFO" "Getting https://releases.hashicorp.com/${tool}/${version}/${tool}_${version}_SHA256SUMS"
   curl -#Ok https://releases.hashicorp.com/${tool}/${version}/${tool}_${version}_SHA256SUMS
-  rCode=${?}
-  if [[ $rCode -gt 0 ]]
-  then
-    log "ERROR" "Failed to download https://releases.hashicorp.com/${tool}/${version}/${tool}_${version}_SHA256SUMS"
-    exit ${rCode}
-  fi
-
   rm -f ${tool}_${version}_SHA256SUMS.sig 2>/dev/null
+
   log "INFO" "Getting https://releases.hashicorp.com/${tool}/${version}/${tool}_${version}_SHA256SUMS.sig"
   curl -#Ok https://releases.hashicorp.com/${tool}/${version}/${tool}_${version}_SHA256SUMS.sig
-  rCode=${?}
-  if [[ $rCode -gt 0 ]]
-  then
-    log "ERROR" "Failed to download https://releases.hashicorp.com/${tool}/${version}/${tool}_${version}_SHA256SUMS.sig"
-    exit ${rCode}
-  fi
 
   log "INFO" "Verifying SHA256SUMS file"
   gpg --verify ${tool}_${version}_SHA256SUMS.sig ${tool}_${version}_SHA256SUMS >/dev/null 2>&1
-  rCode=${?}
-  if [[ ${rCode} -gt 0 ]]
-  then
-    log "ERROR" "Failed to verify ${tool}_${version}_SHA256SUMS"
-    exit ${rCode}
-  else
-    log "INFO" "OK signature for SHA256SUMS file checks out"
-  fi
 
   log "INFO" "Grepping ${tool}_${version}_${platform}.zip from ${tool}_${version}_SHA256SUMS and comparing sums"
   putativesum=$(grep ${tool}_${version}_${platform}.zip ${tool}_${version}_SHA256SUMS  | awk '{print $1}')
-  rCode=${?}
-  if [[ ${rCode} -gt 0 ]]
-  then
-    log "ERROR" "Failed to get putativesum |${putativesum}|"
-    exit ${rCode}
-  else
-    log "INFO" "OK putative SHA256SUM checks out: ${putativesum}"
-  fi
 
   foundsum=$(sha256sum ${tool}_${version}_${platform}.zip | awk '{print $1}')
-  rCode=${?}
-  if [[ ${rCode} -gt 0 ]]
-  then
-    log "ERROR" "Failed to get foundsum |${foundsum}|"
-    exit ${rCode}
-  else
-    log "INFO" "OK found SHA256SUM checks out: ${foundsum}"
-  fi
 
   if [ "${putativesum}" != "${foundsum}" ]
   then
@@ -220,59 +195,19 @@ EOF
   else
     log "INFO" "Sum of ${tool}_${version}_${platform}.zip checks out.  Unzipping into local directory..."
     unzip -o ${tool}_${version}_${platform}.zip >/dev/null 2>&1
-    rCode=${?}
-    if [[ ${rCode} -gt 0 ]]
-    then
-      log "ERROR" "Unzip operation failed.  Stopping here"
-    fi
     log "INFO" "Tidying away download files"
     rm ${tool}_${version}_${platform}.zip
     rm ${tool}_${version}_SHA256SUMS
     rm ${tool}_${version}_SHA256SUMS.sig
   fi
 
-  if [[ -z "${local_only}" ]]
+  if [[ "${local_only}" == "NO" ]]
   then
     log "INFO" "Moving ${tool} binary to ${dest_path}"
     sudo mv "${tool}" "${dest_path}"
-    rCode=${?}
-    if [[ ${rCode} -gt 0 ]]
-    then
-      log "ERROR" "Failed to sudo mv ${tool} ${dest_path}"
-      exit ${rCode}
-    else
-      log "INFO" "Moved ${tool} to ${dest_path}"
-    fi
-
     sudo chown "root:root" "${dest_path}"
-    rCode=${?}
-    if [[ ${rCode} -gt 0 ]]
-    then
-      log "ERROR" "Failed to sudo chown root:root ${dest_path}"
-      exit ${rCode}
-    else
-      log "INFO" "Chowned root:root ${dest_path}"
-    fi
-
     sudo chmod a+x "${dest_path}"
-    rCode=${?}
-    if [[ ${rCode} -gt 0 ]]
-    then
-      log "ERROR" "Failed to sudo chmod a+x ${dest_path}"
-      exit ${rCode}
-    else
-      log "INFO" "Chmoded a+x ${dest_path}"
-    fi
-
     sudo chown --recursive ${tool}:${tool} /opt/${tool}
-    rCode=${?}
-    if [[ ${rCode} -gt 0 ]]
-    then
-      log "ERROR" "Failed to sudo chown --recursive ${tool}:${tool} /opt/${tool}"
-      exit ${rCode}
-    else
-      log "INFO" "OK: sudo chown --recursive ${tool}:${tool} /opt/${tool}"
-    fi
   fi
 }
 
@@ -292,33 +227,11 @@ server=/consul/127.0.0.1#8600
 listen-address=127.0.0.1
 bind-interfaces
 EOF
-  rCode=${?}
-  if [[ ${rCode} == 0 ]]
-  then
-    sudo mv -f /tmp/10-consul /etc/dnsmasq.d
-    rCode=${?}
-    if [[ ${rCode} > 0 ]]
-    then
-      log "ERROR" "Problem moving /tmp/10-consul /etc/dnsmasq.d"
-      exit ${rCode}
-    else
-      sudo chown --recursive root:root /etc/dnsmasq.d
-      if [[ ${rCode} > 0 ]]
-      then
-        log "ERROR" "Problem with sudo chown --recursive root:root /etc/dnsmasq.d"
-        exit ${rCode}
-      fi
-    fi
-  fi
+  sudo mv -f /tmp/10-consul /etc/dnsmasq.d
+  sudo chown --recursive root:root /etc/dnsmasq.d
+
   # Setup resolv to use dnsmasq for consul
   sudo mkdir --parents /etc/resolvconf/resolv.conf/
-  if [[ ${rCode} -gt 0 ]]
-  then
-    log "ERROR" "Failed to sudo mkdir --parents /etc/resolvconf/resolv.conf/"
-    exit ${rCode}
-  else
-    log "INFO" "OK: sudo mkdir --parents /etc/resolvconf/resolv.conf/"
-  fi
   echo "127.0.0.1" | sudo tee /etc/resolvconf/resolv.conf/head
   echo "127.0.0.53" | sudo tee -a /etc/resolvconf/resolv.conf/head
   sudo systemctl enable resolvconf
@@ -350,62 +263,27 @@ LimitNOFILE=65536
 [Install]
 WantedBy=multi-user.target
 EOF
-
-  rCode=${?}
-  if [[ ${rCode} -gt 0 ]]
-  then
-    log "ERROR" "Failed to execute heredoc to /tmp/${tool}.service"
-    exit ${rCode}
-  else
-    sudo mkdir --parents /usr/lib/systemd/system
-    if [[ ${rCode} -gt 0 ]]
-    then
-      log "ERROR" "Failed to execute sudo mkdir --parents /usr/lib/systemd/system"
-      exit ${rCode}
-    fi
-    sudo mv /tmp/${tool}.service /usr/lib/systemd/system/${tool}.service
-    if [[ ${rCode} -gt 0 ]]
-    then
-      log "ERROR" "Failed to execute sudo mv /tmp/${tool}.service /usr/lib/systemd/system/${tool}.service"
-      exit ${rCode}
-    fi
-  fi
+  sudo mkdir --parents /usr/lib/systemd/system
+  sudo mv /tmp/${tool}.service /usr/lib/systemd/system/${tool}.service
 
   log "INFO" "Configuring ${tool} Service"
-
   sudo chown root:root /usr/lib/systemd/system/${tool}.service
-  rCode=${?}
-  if [[ ${rCode} -gt 0 ]]
-  then
-    log "ERROR" "Failed to execute sudo chown root:root /usr/lib/systemd/system/${tool}.service"
-    exit ${rCode}
-  fi
-
   sudo chmod 644 /usr/lib/systemd/system/${tool}.service
-  rCode=${?}
-  if [[ ${rCode} -gt 0 ]]
-  then
-    log "ERROR" "Failed to execute sudo chmod 644 /usr/lib/systemd/system/${tool}.service"
-    exit ${rCode}
-  fi
 }
 
 function install_envoy {
   log "INFO" "Installing dnsmasq resolvconf"
   sudo apt-get --quiet --assume-yes install dnsmasq resolvconf
+
   log "INFO" "Updating"
   sudo apt-get --quiet --assume-yes update
+
   log "INFO" "Installing apt-transport-https ca-certificates curl gnupg-agent software-properties-common"
   sudo apt-get --quiet --assume-yes install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+
   log "INFO" "Curling getenvoy apt-key"
   curl -sL 'https://getenvoy.io/gpg' | sudo apt-key add -
   apt-key fingerprint 6FF974DB 2>/dev/null
-  rCode=${?}
-  if [[ ${rCode} -gt 0 ]]
-  then
-    log "ERROR" "apt-key fingerprint 6FF974DB did not check out.  Stopping here"
-    exit ${rCode}
-  fi
 
   log "INFO" "add-apt-repository getenvoy-deb"
   sudo add-apt-repository \
@@ -415,6 +293,7 @@ function install_envoy {
 
   log "INFO" "apt-get --quiet --assume-yes update"
   sudo apt-get --assume-yes update
+
   log "INFO" "sudo apt-get install -y getenvoy-envoy"
   sudo apt-get install -y getenvoy-envoy
 }
@@ -434,24 +313,26 @@ if [[ -z ${2} ]]
 then
   usage
 fi
-local_only=${3}
+local_only=${3:-"NO"}
 log "INFO" "Tool: ${tool}"
 log "INFO" "Version: ${version}"
 
 log "INFO" "Setting debconf set selections up"
 echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections
 
-if [[ -n "${local_only}" ]]
+if [[ "${local_only}" == "NO" ]]
 then
-  log "INFO" "LOCAL ONLY MODE - DOWNLOADING BINARY TO ${pwd} ONLY"
+  log "INFO" "MAIN MODE - INSTALLATION WITH USER CREATION AND "
   install_dependencies
   create_user ${tool}
   create_install_paths ${tool}
+else
+  log "INFO" "LOCAL ONLY MODE - DOWNLOADING BINARY TO ${pwd} ONLY"
 fi
 
 install_binaries ${tool} "${version}"
 
-if [[ -n "${local_only}" ]]
+if [[ "${local_only}" == "NO" ]]
 then
   # if [[ "${tool}" == "consul" ]]
   # then
