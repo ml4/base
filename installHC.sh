@@ -70,16 +70,16 @@ function install_dependencies {
 
 function user_exists {
   local -r username="$1"
-  id "$username" >/dev/null 2>&1
+  id "${username}" >/dev/null 2>&1
 }
 
 function create_user {
-  local -r user="$1"
-  if $(user_exists "$user"); then
-    echo "User $user already exists. Will not create again."
+  local -r tool="$1"
+  if $(user_exists "${tool}"); then
+    echo "User ${tool} already exists. Will not create again."
   else
-    log "INFO" "Creating user named $user"
-    sudo useradd --system --home /etc/$user.d --shell /bin/false $user
+    log "INFO" "Creating user named ${tool}"
+    sudo useradd --system --home /etc/${tool}.d --shell /bin/false ${tool}
   fi
 }
 
@@ -120,7 +120,7 @@ function install_binaries {
   platform="linux_amd64"
   local -r tool="${1}"
   local -r version="${2}"
-  dest_path="/opt/${tool}/bin"
+  dest_path="/usr/bin"
 
   ## handle keys first
   #
@@ -204,8 +204,8 @@ EOF
   if [[ "${local_only}" == "NO" ]]
   then
     log "INFO" "Moving ${tool} binary to ${dest_path}"
+    sudo chown "root:root" "${tool}"
     sudo mv "${tool}" "${dest_path}"
-    sudo chown "root:root" "${dest_path}"
     sudo chmod a+x "${dest_path}"
     sudo chown --recursive ${tool}:${tool} /opt/${tool}
   fi
@@ -327,7 +327,7 @@ then
   create_user ${tool}
   create_install_paths ${tool}
 else
-  log "INFO" "LOCAL ONLY MODE - DOWNLOADING BINARY TO ${pwd} ONLY"
+  log "INFO" "LOCAL ONLY MODE - DOWNLOADING BINARY TO $(pwd) ONLY"
 fi
 
 install_binaries ${tool} "${version}"
