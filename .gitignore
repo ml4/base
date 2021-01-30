@@ -23,4 +23,5 @@ role-policy.json
 baseUnitTestKey*
 .terraform
 baseUnitTest.tf
-
+## dont need lock file for unit test
+.terraform.lock.hcl
