@@ -5,7 +5,7 @@
 ## Automate the secure downloading of a tool from releases.hashicorp.com to the current machine
 ## Ubuntu/Debian only, but capable to download Consul, Vault and Nomad.
 ## Bits ripped off similar work by @methridge together with my desktop downloader.
-## Needs sudo access to root to be effective.
+## Needs access to root to be effective.
 #
 #############################################################################################################################
 
@@ -53,17 +53,17 @@ function log {
 #
 function install_dependencies {
   log "INFO" "Installing dependencies: apt-get update upgrade dist-upgrade autoremove"
-  sudo apt-get --quiet --assume-yes update
-  sudo apt-get --quiet --assume-yes upgrade
-  sudo apt-get --quiet --assume-yes dist-upgrade
-  sudo apt-get --quiet --assume-yes autoremove
-  log "INFO" "sudo apt-get --quiet --assume-yes install curl unzip jq net-tools"
-  sudo apt-get --quiet --assume-yes install curl unzip jq net-tools
+  apt-get --quiet --assume-yes update
+  apt-get --quiet --assume-yes upgrade
+  apt-get --quiet --assume-yes dist-upgrade
+  apt-get --quiet --assume-yes autoremove
+  log "INFO" "apt-get --quiet --assume-yes install curl unzip jq net-tools"
+  apt-get --quiet --assume-yes install curl unzip jq net-tools
 
   log "INFO" "Installing CNI plugins"
   curl -sSL -o /tmp/cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.8.6/cni-plugins-linux-amd64-v0.8.6.tgz
-  sudo mkdir -p /opt/cni/bin
-  sudo tar -C /opt/cni/bin -xzf /tmp/cni-plugins.tgz
+  mkdir -p /opt/cni/bin
+  tar -C /opt/cni/bin -xzf /tmp/cni-plugins.tgz
 
   log "INFO" "Dependancies Installed"
 }
@@ -79,7 +79,7 @@ function create_user {
     echo "User ${tool} already exists. Will not create again."
   else
     log "INFO" "Creating user named ${tool}"
-    sudo useradd --system --home /etc/${tool}.d --shell /bin/false ${tool}
+    useradd --system --home /etc/${tool}.d --shell /bin/false ${tool}
   fi
 }
 
@@ -110,8 +110,8 @@ function create_install_paths {
   ## so I will use /usr/bin for all tools and pressure the team to snap into line.
   ## As /usr/bin has to be present, create only data and cfg dirs
   #
-  sudo mkdir --parents /opt/${tool}
-  sudo mkdir --parents /etc/${tool}.d
+  mkdir --parents /opt/${tool}
+  mkdir --parents /etc/${tool}.d
 }
 
 ## remove ent/prem capability while knitting into AWS pipeline
@@ -204,22 +204,22 @@ EOF
   if [[ "${local_only}" == "NO" ]]
   then
     log "INFO" "Moving ${tool} binary to ${dest_path}"
-    sudo chown "root:root" "${tool}"
-    sudo mv "${tool}" "${dest_path}"
-    sudo chmod a+x "${dest_path}"
-    sudo chown --recursive ${tool}:${tool} /opt/${tool}
+    chown "root:root" "${tool}"
+    mv "${tool}" "${dest_path}"
+    chmod a+x "${dest_path}"
+    chown --recursive ${tool}:${tool} /opt/${tool}
   fi
 }
 
 function install_dnsmasq {
   log "INFO" "Installing Dnsmasq and ResolvConf"
-  sudo apt-get --quiet --assume-yes install dnsmasq resolvconf
+  apt-get --quiet --assume-yes install dnsmasq resolvconf
 }
 
 function configure_dnsmasq_resolv {
   log "INFO" "Configuring Dnsmasq and ResolvConf"
   # Configure dnsmasq
-  sudo mkdir --parents /etc/dnsmasq.d
+  mkdir --parents /etc/dnsmasq.d
   cat <<EOF >/tmp/10-consul
 # Enable forward lookup of the '$consul_domain' domain:
 server=/consul/127.0.0.1#8600
@@ -227,16 +227,16 @@ server=/consul/127.0.0.1#8600
 listen-address=127.0.0.1
 bind-interfaces
 EOF
-  sudo mv -f /tmp/10-consul /etc/dnsmasq.d
-  sudo chown --recursive root:root /etc/dnsmasq.d
+  mv -f /tmp/10-consul /etc/dnsmasq.d
+  chown --recursive root:root /etc/dnsmasq.d
 
   # Setup resolv to use dnsmasq for consul
-  sudo mkdir --parents /etc/resolvconf/resolv.conf/
-  echo "127.0.0.1" | sudo tee /etc/resolvconf/resolv.conf/head
-  echo "127.0.0.53" | sudo tee -a /etc/resolvconf/resolv.conf/head
-  sudo systemctl enable resolvconf
-  sudo systemctl start resolvconf
-  sudo systemctl restart dnsmasq
+  mkdir --parents /etc/resolvconf/resolv.conf/
+  echo "127.0.0.1" | tee /etc/resolvconf/resolv.conf/head
+  echo "127.0.0.53" | tee -a /etc/resolvconf/resolv.conf/head
+  systemctl enable resolvconf
+  systemctl start resolvconf
+  systemctl restart dnsmasq
 }
 
 function create_service {
@@ -263,39 +263,39 @@ LimitNOFILE=65536
 [Install]
 WantedBy=multi-user.target
 EOF
-  sudo mkdir --parents /usr/lib/systemd/system
-  sudo mv /tmp/${tool}.service /usr/lib/systemd/system/${tool}.service
+  mkdir --parents /usr/lib/systemd/system
+  mv /tmp/${tool}.service /usr/lib/systemd/system/${tool}.service
 
   log "INFO" "Configuring ${tool} Service"
-  sudo chown root:root /usr/lib/systemd/system/${tool}.service
-  sudo chmod 644 /usr/lib/systemd/system/${tool}.service
+  chown root:root /usr/lib/systemd/system/${tool}.service
+  chmod 644 /usr/lib/systemd/system/${tool}.service
 }
 
 function install_envoy {
   log "INFO" "Installing dnsmasq resolvconf"
-  sudo apt-get --quiet --assume-yes install dnsmasq resolvconf
+  apt-get --quiet --assume-yes install dnsmasq resolvconf
 
   log "INFO" "Updating"
-  sudo apt-get --quiet --assume-yes update
+  apt-get --quiet --assume-yes update
 
   log "INFO" "Installing apt-transport-https ca-certificates curl gnupg-agent software-properties-common"
-  sudo apt-get --quiet --assume-yes install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+  apt-get --quiet --assume-yes install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
 
   log "INFO" "Curling getenvoy apt-key"
-  curl -sL 'https://getenvoy.io/gpg' | sudo apt-key add -
+  curl -sL 'https://getenvoy.io/gpg' | apt-key add -
   apt-key fingerprint 6FF974DB 2>/dev/null
 
   log "INFO" "add-apt-repository getenvoy-deb"
-  sudo add-apt-repository \
+  add-apt-repository \
     "deb [arch=amd64] https://dl.bintray.com/tetrate/getenvoy-deb \
     $(lsb_release -cs) \
     nightly"
 
   log "INFO" "apt-get --quiet --assume-yes update"
-  sudo apt-get --assume-yes update
+  apt-get --assume-yes update
 
-  log "INFO" "sudo apt-get install -y getenvoy-envoy"
-  sudo apt-get install -y getenvoy-envoy
+  log "INFO" "apt-get install -y getenvoy-envoy"
+  apt-get install -y getenvoy-envoy
 }
 
 #    #   ##   # #    #
@@ -307,6 +307,11 @@ function install_envoy {
 
 ## main
 #
+if [[ ${EUID} -ne 0 ]]; then
+   echo "This script must be run as root" 1>&2
+   exit 1
+fi
+
 tool=${1}
 version=${2}
 if [[ -z ${2} ]]
@@ -314,11 +319,23 @@ then
   usage
 fi
 local_only=${3:-"NO"}
+
+## create separate temp dir for apt commands given that /tmp has noexec set on CIS
+#
+rm -rf /home/$USER/tmp 2> /dev/null
+mkdir -p /home/$USER/tmp
+TMPDIR=$(mktemp -d /home/$USER/tmp/XXXX)
+TMP=$TMPDIR
+TEMP=$TMPDIR
+export TMPDIR TMP TEMP
+#
+## see https://serverfault.com/a/72971/390412
+
 log "INFO" "Tool: ${tool}"
 log "INFO" "Version: ${version}"
 
 log "INFO" "Setting debconf set selections up"
-echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections
+echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
 if [[ "${local_only}" == "NO" ]]
 then
