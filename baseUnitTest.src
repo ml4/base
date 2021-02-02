@@ -16,6 +16,38 @@ provider "aws" {
   region = "%%REGION%%"
 }
 
+## we use the default VPC for the unit test and TF cannot destroy it
+#
+resource "aws_default_vpc" "default" {
+  tags = {
+    Name = "Default VPC"
+  }
+}
+
+resource "aws_security_group" "def" {
+  name        = "def"
+  vpc_id      = aws_default_vpc.default.id
+  description = "def"
+
+  ## TCP SSH NONSTD IN
+  #
+  ingress {
+    protocol    = "tcp"
+    from_port   = 22
+    to_port     = 22
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ## EXTERNAL GET TO ANYWHERE all traffic
+  #
+  egress {
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 resource "aws_key_pair" "baseUnitTestKey" {
 	key_name = "baseUnitTestKey"
 	public_key = file("./baseUnitTestKey.pub")
@@ -26,6 +58,7 @@ resource "aws_instance" "baseUnitTest" {
   instance_type = "t2.micro"
   key_name      = "baseUnitTestKey"
   user_data     = file("baseUnitTest.sh")
+  security_groups = [ aws_security_group.def.name ]
 
   tags = {
     Name = "baseUnitTest"
