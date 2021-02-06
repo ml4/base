@@ -54,7 +54,7 @@ resource "aws_key_pair" "baseUnitTestKey" {
 }
 
 resource "aws_instance" "baseUnitTest" {
-  ami           = "%%LATESTBASE%%"
+  ami           = "%%LATESTBASEAMI%%"
   instance_type = "t2.micro"
   key_name      = "baseUnitTestKey"
   user_data     = file("baseUnitTest.sh")

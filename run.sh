@@ -160,17 +160,17 @@ else
   log "INFO" "Completed initial build. Proceeding to unit test."
 fi
 
-LATESTBASE=$(aws ec2 describe-images --owners self --region ${REGION} --query "sort_by(Images, &CreationDate)[-1].[ImageId]" --filters "Name=name,Values=base" --output text)
-if [[ -z ${LATESTBASE} ]]
+LATESTBASEAMI=$(aws ec2 describe-images --owners self --region ${REGION} --query "sort_by(Images, &CreationDate)[-1].[ImageId]" --filters "Name=name,Values=base" --output text)
+if [[ -z ${LATESTBASEAMI} ]]
 then
   log "ERROR" "Cannot find base AMI in region ${REGION}"
   exit 1
 fi
 echo
-log "INFO" "ABOUT TO TEST AMI: ${LATESTBASE}"
+log "INFO" "ABOUT TO TEST AMI: ${LATESTBASEAMI}"
 echo
 touch baseUnitTest.tf
-sed "s/%%LATESTBASE%%/${LATESTBASE}/; s/%%REGION%%/${REGION}/" baseUnitTest.src | tee baseUnitTest.tf
+sed "s/%%LATESTBASEAMI%%/${LATESTBASEAMI}/; s/%%REGION%%/${REGION}/" baseUnitTest.src | tee baseUnitTest.tf
 rCode=${?}
 if [[ ${rCode} -gt 0 ]]
 then
@@ -270,34 +270,54 @@ then
   exit 1
 fi
 
-## remove all older AMIs *and their corresponding snapshots* leaving only the latest behind. Do nothing if only one exists
+## copy the base image to other regions if specified
 #
-log "INFO" "Removing older AMIs and corresponding snapshots with aws ec2 describe-images pipeline"
-IMAGENUM=$(aws ec2 describe-images --owners self --region ${REGION} --query "sort_by(Images, &CreationDate)" --filters "Name=name,Values=base" --output json | grep ImageId | wc -l | awk '{print $1}')
-if [[ ${IMAGENUM} > 1 ]]
+if [[ -n ${OTHER_REGIONS} ]]
 then
-  for AMI in $(aws ec2 describe-images --owners self --region ${REGION} --query "sort_by(Images, &CreationDate)" --filters "Name=name,Values=base" --output json | grep ImageId | head -$(( IMAGENUM -= 1 )) | awk -F '"' '{print $4}')
+  for other_region in ${OTHER_REGIONS}
   do
-    SNAP=$(aws ec2 describe-images --owners self --region ${REGION} --query "sort_by(Images, &CreationDate)"  --filters "Name=image-id,Values=${AMI}" --output json | jq '.[0].BlockDeviceMappings[0].Ebs.SnapshotId' | tr -d '"')
-    log "INFO" "Snapshot for ID for AMI ${AMI}: ${SNAP}"
-    log "INFO" "Running aws ec2 deregister-image --image-id ${AMI} --region ${REGION}"
-    aws ec2 deregister-image --image-id ${AMI} --region ${REGION}
-    rCode=${?}
-    if [ ${rCode} -gt 0 ]
-    then
-      log "ERROR" "Problem running aws ec2 deregister-image command"
-      exit 1
-    fi
-    log "INFO" "Running aws ec2 delete-snapshot --snapshot-id ${SNAP} --region ${REGION}"
-    aws ec2 delete-snapshot --snapshot-id ${SNAP} --region ${REGION}
+    log "INFO" "Running aws ec2 copy-image --source-image-id ${LATESTBASEAMI} --source-region ${REGION} --region ${other_region} --name base"
+    aws ec2 copy-image --source-image-id ${LATESTBASEAMI} --source-region ${REGION} --region ${other_region} --name base
     rCode=${?}
     if [[ ${rCode} > 0 ]]
     then
-      log "ERROR" "return status greater than zero for command aws ec2 delete-snapshot --snapshot-id |${SNAP}| --region |${REGION}|"
-      exit 1
+      log "WARN" "AWS base image copy from region ${REGION} to ${other_region} failed.  Investigate manually."
     fi
   done
 fi
+
+## remove all older AMIs *and their corresponding snapshots* leaving only the latest behind. Do nothing if only one exists
+#
+ALL_REGIONS=$(echo "${REGION}" "${OTHER_REGIONS}")
+for REGION in $(echo "${ALL_REGIONS}")
+do
+  log "INFO" "REGION: ${REGION}: Removing older AMIs and corresponding snapshots with aws ec2 describe-images pipeline"
+  IMAGENUM=$(aws ec2 describe-images --owners self --region ${REGION} --query "sort_by(Images, &CreationDate)" --filters "Name=name,Values=base" --output json | grep ImageId | wc -l | awk '{print $1}')
+  if [[ ${IMAGENUM} > 1 ]]
+  then
+    for AMI in $(aws ec2 describe-images --owners self --region ${REGION} --query "sort_by(Images, &CreationDate)" --filters "Name=name,Values=base" --output json | grep ImageId | head -$(( IMAGENUM -= 1 )) | awk -F '"' '{print $4}')
+    do
+      SNAP=$(aws ec2 describe-images --owners self --region ${REGION} --query "sort_by(Images, &CreationDate)"  --filters "Name=image-id,Values=${AMI}" --output json | jq '.[0].BlockDeviceMappings[0].Ebs.SnapshotId' | tr -d '"')
+      log "INFO" "Snapshot for ID for AMI ${AMI}: ${SNAP}"
+      log "INFO" "Running aws ec2 deregister-image --image-id ${AMI} --region ${REGION}"
+      aws ec2 deregister-image --image-id ${AMI} --region ${REGION}
+      rCode=${?}
+      if [ ${rCode} -gt 0 ]
+      then
+        log "ERROR" "Problem running aws ec2 deregister-image command"
+        exit 1
+      fi
+      log "INFO" "Running aws ec2 delete-snapshot --snapshot-id ${SNAP} --region ${REGION}"
+      aws ec2 delete-snapshot --snapshot-id ${SNAP} --region ${REGION}
+      rCode=${?}
+      if [[ ${rCode} > 0 ]]
+      then
+        log "ERROR" "return status greater than zero for command aws ec2 delete-snapshot --snapshot-id |${SNAP}| --region |${REGION}|"
+        exit 1
+      fi
+    done
+  fi
+done
 
 ## tidy up, leave packer_cache
 #

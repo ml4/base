@@ -77,3 +77,10 @@ then
   export UBUNTUPASSWORD=${UBUNTUPASSWORD}
   echo
 fi
+
+if [ -z $(echo ${OTHER_REGIONS}) ]
+then
+  read -p "Space-separated list of OTHER_REGIONS to copy the base image to (do not include main REGION): " OTHER_REGIONS
+  export OTHER_REGIONS="${OTHER_REGIONS}"
+  echo
+fi

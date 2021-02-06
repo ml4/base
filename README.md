@@ -32,7 +32,7 @@
 
 ## Initialisation
 * Use a Linux machine somewhere and generate yourself a Linux boot password with [grub-mkpasswd-pbkdf2](https://www.gnu.org/software/grub/manual/grub/html_node/Invoking-grub_002dmkpasswd_002dpbkdf2.html) - save this for later.
-* Use this to configure your environment variables; read the file before sourcing it.  Check [this](https://rzn.id.au/tech/converting-an-ova-to-an-amazon-ami/) post, credence to Jake.
+* Use this to configure your environment variables; read the file before sourcing it.  Check [this](https://rzn.id.au/tech/converting-an-ova-to-an-amazon-ami/) post, credence to Jake.  Note that a space-separated list of regions instantiated into the ${OTHER_REGIONS} variable will result in the base image being copied to those regions once successfully ingressed into the target region.
 ```shell
 . init.sh
 ```
@@ -68,10 +68,12 @@ make clean
 * Note that this software is provided as-is, and hardens an Ubuntu image built with Packer.  The recommendation is to comply with the above terms of use as they apply in your use case.
 * Running
 ```shell
-echo -e "GRUB_PASSWORD: ${GRUB_PASSWORD}\nGMAIL: $GMAIL\nHOST: $HOST\nDOMAIN: $DOMAIN\nREGION: $REGION\nREMOTELOGHOST: $REMOTELOGHOST\nS3_BUCKET: ${S3_BUCKET}\nAWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID\nAWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY\nAWS_SESSION_TOKEN: $AWS_SESSION_TOKEN\nGMAILPASSWORD: $GMAILPASSWORD\nUBUNTUPASSWORD: $UBUNTUPASSWORD\n"
+echo -e "GRUB_PASSWORD: ${GRUB_PASSWORD}\nGMAIL: ${GMAIL}\nHOST: ${HOST}\nDOMAIN: ${DOMAIN}\nREGION: ${REGION}\nREMOTELOGHOST: ${REMOTELOGHOST}\nS3_BUCKET: ${S3_BUCKET}\nAWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}\nAWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}\nAWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN}\nGMAILPASSWORD: ${GMAILPASSWORD}\nUBUNTUPASSWORD: ${UBUNTUPASSWORD}\nOTHER_REGIONS: ${OTHER_REGIONS}\n"
 ```
 might be convenient during development.
 * Certain environments require `AWS_SESSION_TOKEN` to be set such as your place of work, but although this needs to be set correctly for those environments to work, it is not specifically tested during the Packer run.
 * Put your site-specific base image unit test content in the `baseUnitTest.sh` script which distributes as a nominal Internet connectivity test.
 
-
+## Troubleshooting
+* Post-processor failed: Import task import-ami-0467547a09916b17a failed with status message: ClientError: Disk validation failed [We do not have access to the given resource. Reason 403 Forbidden], error: ResourceNotReady: failed waiting for successful resource state
+  * Have you changed the name of the S3 bucket?  If so, you'll need to remove the role from IAM which refers to the previously instantiated bucket name
