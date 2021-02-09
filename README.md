@@ -6,6 +6,7 @@
 ![Packer version](https://img.shields.io/badge/packer-1.6.6-00ACFF.svg?style=for-the-badge)
 ![Vagrant version](https://img.shields.io/badge/vagrant-2.2.14-1563ff.svg?style=for-the-badge)
 ![Terraform version](https://img.shields.io/badge/terraform-0.14.5-623CE4.svg?style=for-the-badge)
+![VirtualBox version](https://img.shields.io/badge/virtualbox-6.1-red.svg?style=for-the-badge)
 ![Ubuntu version](https://img.shields.io/badge/ubuntu-18.05LTS-blue.svg?style=for-the-badge)
 ![Written with](https://img.shields.io/badge/written_with-macOS-333.svg?style=for-the-badge)
 
@@ -22,12 +23,12 @@
 * Parameterised Packer & Bash, with a little bit of Terraform & Vagrant.  That's it.
 
 ## Prerequisites
-* Packer and Terraform.
+* Vagrant, VirtualBox, Packer and Terraform (tested at the versions above).
 * An AWS account, with locally configured credentials (by which I mean AWS AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY and if you require it, AWS_SESSION_TOKEN).
 * A working [AWS cli tool](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-mac.html).
 * Permissions to create EC2 instances, volumes, S3 buckets, s3 objects, user roles, role policies.
 * A _privately_ accessible AWS S3 bucket.  Packer will deposit the image in OVA format in this bucket, and then create the AMI from it using the standard [AWS process](https://docs.aws.amazon.com/vm-import/latest/userguide/vmie_prereqs.html) leaving the bucket empty.
-* A separate Ubuntu machine for Grub password generation.
+* A separate, temporary Ubuntu machine for Grub password generation. This can be destroyed once you have the crypt which looks something like this: `grub.pbkdf2.sha512.10000.AF3blahXXX` (see https://sleeplessbeastie.eu/2015/01/06/how-to-password-protect-grub-entries/)
 * Gmail account for system sSMTP configuration - the box will email this account during the build and on boot.
 
 ## Initialisation
