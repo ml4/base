@@ -25,3 +25,5 @@ baseUnitTestKey*
 baseUnitTest.tf
 ## dont need lock file for unit test
 .terraform.lock.hcl
+base.secrets.pkrvars.hcl
+
