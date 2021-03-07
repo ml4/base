@@ -47,3 +47,8 @@ variable "remoteLogHost" {
   type = string
   default = ""
 }
+
+variable "ownerTag" {
+  type = string
+  default = ""
+}

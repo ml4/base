@@ -81,6 +81,12 @@ then
   exit 1
 fi
 
+if [[ -z "${OWNER_TAG}" ]]
+then
+  log "ERROR" "OWNER_TAG is not set"
+  exit 1
+fi
+
 if [[ -n "${S3_BUCKET}" ]]
 then
   aws s3 ls | awk '{print $NF}' | grep ^${S3_BUCKET}$
@@ -149,8 +155,8 @@ packer build -var=grubPassword=${GRUB_PASSWORD} -var=email=${GMAIL} -var=emailPa
              -var=domain=${DOMAIN} -var=aws_access_key_id=${AWS_ACCESS_KEY_ID} \
              -var=aws_secret_access_key=${AWS_SECRET_ACCESS_KEY} \
              -var=aws_session_token=${AWS_SESSION_TOKEN} \
-             -var=s3_bucket=${S3_BUCKET} -var=region=${REGION} -var=ubuntu_password=${UBUNTUPASSWORD} packer && rm preseed.cfg role-policy.json 2>/dev/null
-
+             -var=s3_bucket=${S3_BUCKET} -var=region=${REGION} \
+             -var=ownerTag=${OWNER_TAG} -var=ubuntu_password=${UBUNTUPASSWORD} packer && rm preseed.cfg role-policy.json 2>/dev/null
 
 if [[ -f preseed.cfg ]]
 then

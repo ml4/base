@@ -84,3 +84,10 @@ then
   export OTHER_REGIONS="${OTHER_REGIONS}"
   echo
 fi
+
+if [ -z $(echo ${OWNER_TAG}) ]
+then
+  read -p "AMI image Owner tag: " OWNER_TAG
+  export OWNER_TAG="${OWNER_TAG}"
+  echo
+fi
