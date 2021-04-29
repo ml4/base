@@ -432,7 +432,7 @@ echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
 if [[ "${local_only}" == "NO" ]]
 then
-  log "INFO" "MAIN MODE - INSTALLATION WITH USER CREATION AND "
+  log "INFO" "MAIN MODE - INSTALLATION WITH USER CREATION"
   install_dependencies
   create_user ${tool}
   create_install_paths ${tool}
