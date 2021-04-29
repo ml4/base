@@ -1,4 +1,4 @@
-![Development status](https://img.shields.io/badge/status-uat-F90.svg?style=for-the-badge)
+![Development status](https://img.shields.io/badge/status-uat-F92.svg?style=for-the-badge)
 ![MIT license](https://img.shields.io/badge/licence-MIT-ff69b4.svg?style=for-the-badge)
 ![CIS version](https://img.shields.io/badge/CIS_benchmark-2.0.1-003b5b.svg?style=for-the-badge)
 ![CIS CAT](https://img.shields.io/badge/CIS_CAT_Lite-4.0.21-003b5b.svg?style=for-the-badge)
