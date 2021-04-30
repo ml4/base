@@ -249,7 +249,10 @@ else
   sudo sed -i 's/^UseSTARTTLS=.*$/UseSTARTTLS=YES/' /etc/ssmtp/ssmtp.conf
 fi
 log "INFO" "1.4.1: Emailing ${GMAIL} with update to system build process"
-log "WARN" "1.4.1: If this fails, check the email password first!"
+log "WARN" "1.4.1: If this fails, check the email password first else Google is blocking:"
+log "WARN" "1.4.1: Check https://serverfault.com/a/672182/390412"
+log "WARN" "1.4.1: Log in to ${GMAIL} from somewhere else then go to https://g.co/allowaccess"
+log "WARN" "1.4.1: Otherwise, comment the email attempt, rebuild, deploy and check /var/log/mail.err"
 echo "$(date +%Y-%m-%d::%H:%M): Email alerts will come to this address" | sudo mail -s "`hostname -f`: sSMTP MTA is up" ${GMAIL}
 
 logRun "1.4.1" "sudo apt-get --quiet --assume-yes install aide"
