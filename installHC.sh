@@ -7,11 +7,16 @@
 ## Bits ripped off similar work by @methridge together with my desktop downloader.
 ## Needs access to root to be effective.
 #
+## NOTE: Due to use of Gruntworks run scripts (not install scripts as I already did this one and theirs
+## does not verify GPG), this script is currently for consul, vault and nomad only.
+#
 #############################################################################################################################
 
 set -euo pipefail
 
 export DEBIAN_FRONTEND=noninteractive
+readonly SCRIPT_NAME="$(basename "$0")"
+readonly SYSTEM_BIN_DIR="/usr/local/bin"
 
 function usage {
   echo -e "Usage:\n\n"
@@ -44,28 +49,33 @@ function log {
   then
     COL=${bldylw}
   fi
-  local -r message="$2"
+
+  local -r func="$2"
+  local -r message="$3"
   local -r timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-  >&2 echo -e "${bldcyn}${timestamp}${txtrst} [${COL}${level}${txtrst}] ${message}"
+  >&2 echo -e "${bldcyn}${timestamp}${txtrst} [${COL}${level}${txtrst}] [${SCRIPT_NAME}:${func}] ${message}"
 }
 
-## next few I found in @methridge 2020-01-01ish
-#
 function install_dependencies {
-  log "INFO" "Installing dependencies: apt-get update upgrade dist-upgrade autoremove"
-  apt-get --quiet --assume-yes update
-  apt-get --quiet --assume-yes upgrade
-  apt-get --quiet --assume-yes dist-upgrade
-  apt-get --quiet --assume-yes autoremove
-  log "INFO" "apt-get --quiet --assume-yes install curl unzip jq net-tools"
-  apt-get --quiet --assume-yes install curl unzip jq net-tools
+  local -r tool="$1"
+  log "INFO" ${FUNCNAME[0]} "apt-get --quiet --assume-yes install curl unzip jq net-tools git"
+  apt-get --quiet --assume-yes install curl unzip jq net-tools git
 
-  log "INFO" "Installing CNI plugins"
-  curl -sSL -o /tmp/cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.8.6/cni-plugins-linux-amd64-v0.8.6.tgz
-  mkdir -p /opt/cni/bin
-  tar -C /opt/cni/bin -xzf /tmp/cni-plugins.tgz
+  if [[ ${tool} == "consul" ]]
+  then
+    log "INFO" ${FUNCNAME[0]} "Installing CNI plugins"
+    curl -sSL -o /tmp/cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.8.6/cni-plugins-linux-amd64-v0.8.6.tgz
+    mkdir -p /opt/cni/bin
+    tar -C /opt/cni/bin -xzf /tmp/cni-plugins.tgz
+  fi
 
-  log "INFO" "Dependancies Installed"
+  if [[ ${tool} == "vault" ]]
+  then
+    log "INFO" ${FUNCNAME[0]} "Installing Lib Cap"
+    apt-get --quiet --assume-yes install libcap2-bin
+  fi
+
+  log "INFO" ${FUNCNAME[0]} "Dependancies Installed"
 }
 
 function user_exists {
@@ -78,14 +88,15 @@ function create_user {
   if $(user_exists "${tool}"); then
     echo "User ${tool} already exists. Will not create again."
   else
-    log "INFO" "Creating user named ${tool}"
+    log "INFO" ${FUNCNAME[0]} "Creating user named ${tool}"
     useradd --system --home /etc/${tool}.d --shell /bin/false ${tool}
   fi
 }
 
 function create_install_paths {
+
   local -r tool="$1"
-  log "INFO" "Creating install dirs for ${tool}"
+  log "INFO" ${FUNCNAME[0]} "Creating install dirs for ${tool}"
 
   ## deployment guides - Jan 2021
   #
@@ -97,20 +108,20 @@ function create_install_paths {
   #
   ## nomad
   #
-  ## /usr/local/bin = binary
+  ## /usr/local/bin = binary      # /usr/bin used for this
   ## /opt/nomad     = data
   ## /etc/nomad.d   = cfg, tls cert/key
   #
   ## vault
   #
-  ## /usr/local/bin = binary
+  ## /usr/local/bin = binary      # /usr/bin used for this
   ## /etc/vault.d   = cfg, tls cert/key
   #
   ## Sounds like /usr/bin for Consul is to match FHS and packaging efforts
   ## so I will use /usr/bin for all tools and pressure the team to snap into line.
   ## As /usr/bin has to be present, create only data and cfg dirs
   #
-  mkdir --parents /opt/${tool}
+  mkdir --parents /opt/${tool}/{bin,config,data,tls/ca,log}
   mkdir --parents /etc/${tool}.d
 }
 
@@ -120,13 +131,13 @@ function install_binaries {
   platform="linux_amd64"
   local -r tool="${1}"
   local -r version="${2}"
-  dest_path="/usr/bin"
+  dest_path="/opt/${tool}/bin/${tool}"
 
   ## handle keys first
   #
   if [[ -z $(gpg --list-keys | grep 51852D87348FFC4C) ]]
   then
-    log "INFO" "Getting HashiCorp public GPG key"
+    log "INFO" ${FUNCNAME[0]} "Getting HashiCorp public GPG key"
     cat <<EOF >/tmp/hashicorp.asc
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 
@@ -254,40 +265,40 @@ EOF
     gpg --import /tmp/hashicorp.asc
     rm -f /tmp/hashicorp.asc
   else
-    log "INFO" "Already got HashiCorp key in your keyring"
+    log "INFO" ${FUNCNAME[0]} "Already got HashiCorp key in your keyring"
   fi
 
   ## get media
   #
   # remove existing as unzip -o varies platform-platform
   rm -f ${tool}_${version}_${platform}.zip 2>/dev/null
-  log "INFO" "Getting https://releases.hashicorp.com/${tool}/${version}/${tool}_${version}_${platform}.zip"
+  log "INFO" ${FUNCNAME[0]} "Getting https://releases.hashicorp.com/${tool}/${version}/${tool}_${version}_${platform}.zip"
   curl -#Ok https://releases.hashicorp.com/${tool}/${version}/${tool}_${version}_${platform}.zip
   rm -f ${tool}_${version}_SHA256SUMS 2>/dev/null
 
-  log "INFO" "Getting https://releases.hashicorp.com/${tool}/${version}/${tool}_${version}_SHA256SUMS"
+  log "INFO" ${FUNCNAME[0]} "Getting https://releases.hashicorp.com/${tool}/${version}/${tool}_${version}_SHA256SUMS"
   curl -#Ok https://releases.hashicorp.com/${tool}/${version}/${tool}_${version}_SHA256SUMS
   rm -f ${tool}_${version}_SHA256SUMS.sig 2>/dev/null
 
-  log "INFO" "Getting https://releases.hashicorp.com/${tool}/${version}/${tool}_${version}_SHA256SUMS.sig"
+  log "INFO" ${FUNCNAME[0]} "Getting https://releases.hashicorp.com/${tool}/${version}/${tool}_${version}_SHA256SUMS.sig"
   curl -#Ok https://releases.hashicorp.com/${tool}/${version}/${tool}_${version}_SHA256SUMS.sig
 
-  log "INFO" "Verifying SHA256SUMS file"
+  log "INFO" ${FUNCNAME[0]} "Verifying SHA256SUMS file"
   gpg --verify ${tool}_${version}_SHA256SUMS.sig ${tool}_${version}_SHA256SUMS >/dev/null 2>&1
 
-  log "INFO" "Grepping ${tool}_${version}_${platform}.zip from ${tool}_${version}_SHA256SUMS and comparing sums"
+  log "INFO" ${FUNCNAME[0]} "Grepping ${tool}_${version}_${platform}.zip from ${tool}_${version}_SHA256SUMS and comparing sums"
   putativesum=$(grep ${tool}_${version}_${platform}.zip ${tool}_${version}_SHA256SUMS  | awk '{print $1}')
 
   foundsum=$(sha256sum ${tool}_${version}_${platform}.zip | awk '{print $1}')
 
   if [ "${putativesum}" != "${foundsum}" ]
   then
-    log "ERROR" "Sum of zip ${tool}_${version}_${platform}.zip is not what is in the SHA256SUMS file.  Possible tampering!"
+    log "ERROR" ${FUNCNAME[0]} "Sum of zip ${tool}_${version}_${platform}.zip is not what is in the SHA256SUMS file.  Possible tampering!"
     exit 1
   else
-    log "INFO" "Sum of ${tool}_${version}_${platform}.zip checks out.  Unzipping into local directory..."
+    log "INFO" ${FUNCNAME[0]} "Sum of ${tool}_${version}_${platform}.zip checks out.  Unzipping into local directory..."
     unzip -o ${tool}_${version}_${platform}.zip >/dev/null 2>&1
-    log "INFO" "Tidying away download files"
+    log "INFO" ${FUNCNAME[0]} "Tidying away download files"
     rm ${tool}_${version}_${platform}.zip
     rm ${tool}_${version}_SHA256SUMS
     rm ${tool}_${version}_SHA256SUMS.sig
@@ -295,101 +306,217 @@ EOF
 
   if [[ "${local_only}" == "NO" ]]
   then
-    log "INFO" "Moving ${tool} binary to ${dest_path}"
-    chown "root:root" "${tool}"
+    log "INFO" ${FUNCNAME[0]} "Moving ${tool} binary to ${dest_path}"
+    chown ${tool}:${tool} "${tool}"
     mv "${tool}" "${dest_path}"
     chmod a+x "${dest_path}"
     chown --recursive ${tool}:${tool} /opt/${tool}
   fi
+
+  ## create symlink in system bin
+  #
+  local -r symlink_path="${SYSTEM_BIN_DIR}/${tool}"
+  if [[ -f "${symlink_path}" ]]; then
+    log "INFO" ${FUNCNAME[0]} "Symlink ${symlink_path} already exists. Will not add again."
+  else
+    log "INFO" ${FUNCNAME[0]} "Adding symlink to ${dest_path} in ${symlink_path}"
+    sudo ln -s "${dest_path}" "${symlink_path}"
+  fi
 }
 
-function install_dnsmasq {
-  log "INFO" "Installing Dnsmasq and ResolvConf"
-  apt-get --quiet --assume-yes install dnsmasq resolvconf
-}
-
-function configure_dnsmasq_resolv {
-  log "INFO" "Configuring Dnsmasq and ResolvConf"
-  # Configure dnsmasq
-  mkdir --parents /etc/dnsmasq.d
-  cat <<EOF >/tmp/10-consul
-# Enable forward lookup of the '$consul_domain' domain:
-server=/consul/127.0.0.1#8600
-
-listen-address=127.0.0.1
-bind-interfaces
-EOF
-  mv -f /tmp/10-consul /etc/dnsmasq.d
-  chown --recursive root:root /etc/dnsmasq.d
-
-  # Setup resolv to use dnsmasq for consul
-  mkdir --parents /etc/resolvconf/resolv.conf/
-  echo "127.0.0.1" | tee /etc/resolvconf/resolv.conf/head
-  echo "127.0.0.53" | tee -a /etc/resolvconf/resolv.conf/head
-  systemctl enable resolvconf
-  systemctl start resolvconf
-  systemctl restart dnsmasq
-}
-
-function create_service {
+function run_post_installation_tasks {
   local -r tool="$1"
-  cat <<EOF >/tmp/${tool}.service
-[Unit]
-Description="HashiCorp ${tool}"
-Documentation=https://www.hashicorp.com/
-Requires=network-online.target
-After=network-online.target
-ConditionFileNotEmpty=/etc/${tool}.d/${tool}.hcl
+  log "INFO" ${FUNCNAME[0]} "Running post installation tasks for ${tool}"
 
-[Service]
-Type=notify
-User=${tool}
-Group=${tool}
-ExecStart=/opt/${tool}/bin/${tool} agent -config-dir=/etc/${tool}.d/ -data-dir /opt/${tool}/data
-ExecReload=/opt/${tool}/bin/${tool} reload
-KillMode=process
-Restart=on-failure
-TimeoutSec=300s
-LimitNOFILE=65536
+  ## installation of gruntworks run-tool scripting
+  #
+  log "INFO" ${FUNCNAME[0]} "Cloning Gruntworks module to install run-${tool} script"
+  pushd ${TMPDIR} 2>/dev/null
+  git clone https://github.com/hashicorp/terraform-aws-${tool}.git
+  rCode=${?}
+  if [[ ${rCode} > 0 ]]
+  then
+    log "ERROR" ${FUNCNAME[0]} "Problem with git clone git@github.com:hashicorp/terraform-aws-${tool}.git"
+    exit ${rCode}
+  fi
 
-[Install]
-WantedBy=multi-user.target
-EOF
-  mkdir --parents /usr/lib/systemd/system
-  mv /tmp/${tool}.service /usr/lib/systemd/system/${tool}.service
+  mv terraform-aws-${tool}/modules/run-${tool}/run-${tool} /opt/${tool}/bin/run-${tool}
+  rCode=${?}
+  if [[ ${rCode} > 0 ]]
+  then
+    log "ERROR" ${FUNCNAME[0]} "Problem with mv terraform-aws-${tool}/modules/run-${tool}/run-${tool} /opt/${tool}/bin/run-${tool}"
+    exit ${rCode}
+  fi
 
-  log "INFO" "Configuring and enabling ${tool} Service"
-  chown root:root /usr/lib/systemd/system/${tool}.service
-  chmod 644 /usr/lib/systemd/system/${tool}.service
-  systemctl enable ${tool}
+  chmod a+x /opt/${tool}/bin/run-${tool}
+  rCode=${?}
+  if [[ ${rCode} > 0 ]]
+  then
+    log "ERROR" ${FUNCNAME[0]} "Problem with chmod a+x /opt/${tool}/bin/run-${tool}"
+    exit ${rCode}
+  else
+    log "INFO" ${FUNCNAME[0]} "Installed /opt/${tool}/bin/run-${tool}"
+  fi
+
+  if [[ "${tool}" == "consul" ]]
+  then
+    log "INFO" ${FUNCNAME[0]} "Adding systemd-resolved for ${tool}"
+    terraform-aws-consul/modules/setup-systemd-resolved/setup-systemd-resolved
+  fi
+  popd 2>/dev/null
+
+  if [[ "${tool}" == "consul" ]]
+  then
+    log "INFO" ${FUNCNAME[0]} "Setting firewall for ${tool}"
+    sudo iptables -A INPUT -p tcp --dport 8300 -m state --state NEW -j ACCEPT
+    sudo iptables -A INPUT -p tcp --dport 8301 -m state --state NEW -j ACCEPT
+    sudo iptables -A INPUT -p udp --dport 8301 -m state --state NEW -j ACCEPT
+    sudo iptables -A INPUT -p tcp --dport 8302 -m state --state NEW -j ACCEPT
+    sudo iptables -A INPUT -p udp --dport 8302 -m state --state NEW -j ACCEPT
+    sudo iptables -A INPUT -p tcp --dport 8500 -m state --state NEW -j ACCEPT
+    sudo iptables -A INPUT -p tcp --dport 8501 -m state --state NEW -j ACCEPT
+    sudo iptables -A INPUT -p tcp --dport 8502 -m state --state NEW -j ACCEPT
+    sudo iptables -A INPUT -p tcp --dport 8600 -m state --state NEW -j ACCEPT
+    sudo iptables -A INPUT -p tcp --dport 21000:21255 -m state --state NEW -j ACCEPT
+    sudo iptables -A INPUT -p tcp --dport 21500:21755 -m state --state NEW -j ACCEPT
+  elif [[ "${tool}" == "nomad" ]]
+  then
+    log "INFO" ${FUNCNAME[0]} "Doing nothing yet for ${tool}"
+  elif [[ "${tool}" == "terraform" ]]
+  then
+    log "INFO" ${FUNCNAME[0]} "Doing nothing yet for ${tool}"
+  elif [[ "${tool}" == "vault" ]]
+  then
+    sudo iptables -A INPUT -p tcp --dport 8200 -m state --state NEW -j ACCEPT
+    sudo iptables -A INPUT -p tcp --dport 8201 -m state --state NEW -j ACCEPT
+  fi
 }
 
-function install_envoy {
-  log "INFO" "Installing dnsmasq resolvconf"
-  apt-get --quiet --assume-yes install dnsmasq resolvconf
+# function install_dnsmasq {
+#   log "INFO" ${FUNCNAME[0]} "Installing Dnsmasq and ResolvConf"
+#   apt-get --quiet --assume-yes install dnsmasq resolvconf
+# }
 
-  log "INFO" "Updating"
-  apt-get --quiet --assume-yes update
+# function configure_dnsmasq_resolv {
+#   log "INFO" ${FUNCNAME[0]} "Configuring Dnsmasq and ResolvConf"
+#   # Configure dnsmasq
+#   mkdir --parents /etc/dnsmasq.d
+#   cat <<EOF >/tmp/10-consul
+# # Enable forward lookup of the '$consul_domain' domain:
+# server=/consul/127.0.0.1#8600
 
-  log "INFO" "Installing apt-transport-https ca-certificates curl gnupg-agent software-properties-common"
-  apt-get --quiet --assume-yes install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+# listen-address=127.0.0.1
+# bind-interfaces
+# EOF
+#   mv -f /tmp/10-consul /etc/dnsmasq.d
+#   chown --recursive root:root /etc/dnsmasq.d
 
-  log "INFO" "Curling getenvoy apt-key"
-  curl -sL 'https://getenvoy.io/gpg' | apt-key add -
-  apt-key fingerprint 6FF974DB 2>/dev/null
+#   # Setup resolv to use dnsmasq for consul
+#   mkdir --parents /etc/resolvconf/resolv.conf/
+#   echo "127.0.0.1" | tee /etc/resolvconf/resolv.conf/head
+#   echo "127.0.0.53" | tee -a /etc/resolvconf/resolv.conf/head
+#   systemctl enable resolvconf
+#   systemctl start resolvconf
+#   systemctl restart dnsmasq
+# }
 
-  log "INFO" "add-apt-repository getenvoy-deb"
-  add-apt-repository \
-    "deb [arch=amd64] https://dl.bintray.com/tetrate/getenvoy-deb \
-    $(lsb_release -cs) \
-    nightly"
+# function create_service {
+#   local -r tool="$1"
+#   local -r tmpf="/tmp/${tool}.service"
+#   touch "${tmpf}"
 
-  log "INFO" "apt-get --quiet --assume-yes update"
-  apt-get --assume-yes update
+#   cat <EOF >/tmp/${tool}.service
+# [Unit]
+# Description="HashiCorp ${tool}"
+# Documentation=https://www.hashicorp.com/
+# Requires=network-online.target
+# After=network-online.target
+# ConditionFileNotEmpty=/etc/${tool}.d/${tool}.hcl
 
-  log "INFO" "apt-get install -y getenvoy-envoy"
-  apt-get install -y getenvoy-envoy
-}
+# [Service]
+# Type=notify
+# User=${tool}
+# Group=${tool}
+# Restart=on-failure
+# EOF
+#   rCode=${?}
+#   if [[ ${rCode} > 0 ]]
+#   then
+#     echo "ERROR: Return status greater than zero when writing file /tmp/${tool}.service"
+#     exit ${rCode}
+#   fi
+
+
+#   if [[ ${tool} == "consul" ]]
+#   then
+#     cat <<EOF >/tmp/${tool}.service
+# ExecStart=/opt/${tool}/bin/${tool} agent -config-dir=/etc/${tool}.d/ -data-dir /opt/${tool}/data
+# ExecReload=/opt/${tool}/bin/${tool} reload
+# KillMode=process
+# TimeoutSec=300s
+# LimitNOFILE=65536
+
+# [Install]
+# WantedBy=multi-user.target
+# EOF
+#   elif [[ ${tool} == "vault" ]]
+#   then
+#     cat <<EOF >/tmp/${tool}.service
+# ProtectSystem=full
+# ProtectHome=read-only
+# PrivateTmp=yes
+# PrivateDevices=yes
+# SecureBits=keep-caps
+# AmbientCapabilities=CAP_IPC_LOCK
+# Capabilities=CAP_IPC_LOCK+ep
+# CapabilityBoundingSet=CAP_SYSLOG CAP_IPC_LOCK
+# NoNewPrivileges=yes
+# ExecStart=/usr/local/bin/vault server -config=/etc/vault.d/vault.hcl
+# ExecReload=/bin/kill --signal HUP \$MAINPID
+# KillMode=process
+# KillSignal=SIGINT
+# RestartSec=5
+# TimeoutStopSec=30
+# StartLimitIntervalSec=60
+# StartLimitBurst=3
+# EOF
+#   fi
+
+#   mkdir --parents /usr/lib/systemd/system
+#   mv -f /tmp/${tool}.service /usr/lib/systemd/system/${tool}.service
+
+#   log "INFO" ${FUNCNAME[0]} "Configuring and enabling ${tool} Service"
+#   chown root:root /usr/lib/systemd/system/${tool}.service
+#   chmod 644 /usr/lib/systemd/system/${tool}.service
+#   systemctl enable ${tool}  # started by the run-${tool}.sh script (which is run by terraform on provision)
+# }
+
+# function install_envoy {
+#   log "INFO" ${FUNCNAME[0]} "Installing dnsmasq resolvconf"
+#   apt-get --quiet --assume-yes install dnsmasq resolvconf
+
+#   log "INFO" ${FUNCNAME[0]} "Updating"
+#   apt-get --quiet --assume-yes update
+
+#   log "INFO" ${FUNCNAME[0]} "Installing apt-transport-https ca-certificates curl gnupg-agent software-properties-common"
+#   apt-get --quiet --assume-yes install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+
+#   log "INFO" ${FUNCNAME[0]} "Curling getenvoy apt-key"
+#   curl -sL 'https://getenvoy.io/gpg' | apt-key add -
+#   apt-key fingerprint 6FF974DB 2>/dev/null
+
+#   log "INFO" ${FUNCNAME[0]} "add-apt-repository getenvoy-deb"
+#   add-apt-repository \
+#     "deb [arch=amd64] https://dl.bintray.com/tetrate/getenvoy-deb \
+#     $(lsb_release -cs) \
+#     nightly"
+
+#   log "INFO" ${FUNCNAME[0]} "apt-get --quiet --assume-yes update"
+#   apt-get --assume-yes update
+
+#   log "INFO" ${FUNCNAME[0]} "apt-get install -y getenvoy-envoy"
+#   apt-get install -y getenvoy-envoy
+# }
 
 #    #   ##   # #    #
 ##  ##  #  #  # ##   #
@@ -400,62 +527,83 @@ function install_envoy {
 
 ## main
 #
-if [[ ${EUID} -ne 0 ]]; then
-   echo "This script must be run as root" 1>&2
-   exit 1
-fi
+function main {
+  if [[ ${EUID} -ne 0 ]]; then
+    echo "This script must be run as root" 1>&2
+    exit 1
+  fi
 
-tool=${1}
-version=${2}
-if [[ -z ${2} ]]
-then
-  usage
-fi
-local_only=${3:-"NO"}
+  tool=${1}
+  version=${2}
+  if [[ -z ${2} ]]
+  then
+    usage
+  fi
+  local_only=${3:-"NO"}
 
-## create separate temp dir for apt commands given that /tmp has noexec set on CIS
+  ## write descriptor
+  #
+  date=$(date '+%Y-%m-%d %H:%M')
+  echo "## phoenix build descriptor" | tee /etc/phoenix
+  echo "#" | tee -a /etc/phoenix
+  echo "tool:  ${tool}" | tee -a /etc/phoenix
+  echo "build: ${date}" | tee -a /etc/phoenix
+
+  ## if bastion machine_type, exit.  This should be the only non-HashiCorp machine type
+  #
+  if [[ ${tool} == "bastion" ]]
+  then
+    log "INFO" ${FUNCNAME[0]} "Bastion deployment - nothing more to do"
+    exit 0
+  fi
+
+  ## create separate temp dir for apt commands given that /tmp has noexec set on CIS
+  #
+  rm -rf /home/${USER}/tmp 2> /dev/null
+  mkdir --parents /home/${USER}/tmp
+  TMPDIR=$(mktemp -d /home/${USER}/tmp/XXXX)
+  TMP=$TMPDIR
+  TEMP=$TMPDIR
+  export TMPDIR TMP TEMP
+  #
+  ## see https://serverfault.com/a/72971/390412
+
+  log "INFO" ${FUNCNAME[0]} "Tool: ${tool}"
+  log "INFO" ${FUNCNAME[0]} "Version: ${version}"
+
+  log "INFO" ${FUNCNAME[0]} "Setting debconf set selections up"
+  echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+
+  if [[ "${local_only}" == "NO" ]]
+  then
+    log "INFO" ${FUNCNAME[0]} "MAIN MODE - INSTALLATION WITH USER CREATION AND DEPENDENCY MANAGEMENT"
+    install_dependencies ${tool}
+    create_user ${tool}
+    create_install_paths ${tool}
+  else
+    log "INFO" ${FUNCNAME[0]} "LOCAL ONLY MODE - DOWNLOADING BINARY TO $(pwd) ONLY"
+  fi
+
+  install_binaries ${tool} "${version}"
+
+  if [[ "${local_only}" == "NO" ]]
+  then
+    # if [[ "${tool}" == "consul" ]]
+    # then
+    #   install_dnsmasq # even without attempt to install resolvconf, presumably dnsmasq was trying a /tmp exec
+    #   configure_dnsmasq_resolv
+    #   install_envoy # was not working from https://www.getenvoy.io/install/envoy/ubuntu/ on 2020-01-06
+    # fi
+    run_post_installation_tasks ${tool}
+    # create_service ${tool}
+  fi
+
+  log "INFO" ${FUNCNAME[0]} "All done.  Tool configuration is expected to take place outside this script"
+  #
+  ## expects a configuration to be made, but this is just an installer.
+  ## don't dig gruntworks mega cli wrapping script.  Let's get tool config in a file.
+}
+
+main "$@"
 #
-rm -rf /home/$USER/tmp 2> /dev/null
-mkdir -p /home/$USER/tmp
-TMPDIR=$(mktemp -d /home/$USER/tmp/XXXX)
-TMP=$TMPDIR
-TEMP=$TMPDIR
-export TMPDIR TMP TEMP
-#
-## see https://serverfault.com/a/72971/390412
-
-log "INFO" "Tool: ${tool}"
-log "INFO" "Version: ${version}"
-
-log "INFO" "Setting debconf set selections up"
-echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
-
-if [[ "${local_only}" == "NO" ]]
-then
-  log "INFO" "MAIN MODE - INSTALLATION WITH USER CREATION"
-  install_dependencies
-  create_user ${tool}
-  create_install_paths ${tool}
-else
-  log "INFO" "LOCAL ONLY MODE - DOWNLOADING BINARY TO $(pwd) ONLY"
-fi
-
-install_binaries ${tool} "${version}"
-
-if [[ "${local_only}" == "NO" ]]
-then
-  # if [[ "${tool}" == "consul" ]]
-  # then
-  #   install_dnsmasq # even without attempt to install resolvconf, presumably dnsmasq was trying a /tmp exec
-  #   configure_dnsmasq_resolv
-  #   install_envoy # was not working from https://www.getenvoy.io/install/envoy/ubuntu/ on 2020-01-06
-  # fi
-  create_service ${tool}
-fi
-
-log "INFO" "All done.  Tool configuration is expected to take place outside this script"
-#
-## expects a configuration to be made, but this is just an installer.
-## don't dig gruntworks mega cli wrapping script.  Let's get tool config in a file.
-#
-## done
+## jah
