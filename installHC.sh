@@ -45,6 +45,9 @@ function log {
   elif [ "${level}" == "ERROR" ]
   then
     COL=${bldred}
+  elif [ "${level}" == "DIVIDE" ]
+  then
+    COL=${bldpur}
   elif [ "${level}" == "WARN" ]
   then
     COL=${bldylw}
@@ -58,8 +61,21 @@ function log {
 
 function install_dependencies {
   local -r tool="$1"
+  log "INFO" ${FUNCNAME[0]} "apt-get --quiet --assume-yes update"
+  apt-get --quiet --assume-yes update
+  log "INFO" ${FUNCNAME[0]} "apt-get --quiet --assume-yes upgrade"
+  apt-get --quiet --assume-yes upgrade
+  log "INFO" ${FUNCNAME[0]} "apt-get --quiet --assume-yes dist-upgrade"
+  apt-get --quiet --assume-yes dist-upgrade
+  log "INFO" ${FUNCNAME[0]} "apt-get --quiet --assume-yes autoremove"
+  apt-get --quiet --assume-yes autoremove
   log "INFO" ${FUNCNAME[0]} "apt-get --quiet --assume-yes install curl unzip jq net-tools git"
   apt-get --quiet --assume-yes install curl unzip jq net-tools git
+
+  log "INFO" ${FUNCNAME[0]} "Installing AWS CLI"
+  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  unzip awscliv2.zip
+  sudo ./aws/install
 
   if [[ ${tool} == "consul" ]]
   then
@@ -94,7 +110,6 @@ function create_user {
 }
 
 function create_install_paths {
-
   local -r tool="$1"
   log "INFO" ${FUNCNAME[0]} "Creating install dirs for ${tool}"
 
