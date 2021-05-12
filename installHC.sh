@@ -70,12 +70,12 @@ function install_dependencies {
   log "INFO" ${FUNCNAME[0]} "apt-get --quiet --assume-yes autoremove"
   apt-get --quiet --assume-yes autoremove
   log "INFO" ${FUNCNAME[0]} "apt-get --quiet --assume-yes install curl unzip jq net-tools git"
-  apt-get --quiet --assume-yes install curl unzip jq net-tools git
+  apt-get --quiet --assume-yes install curl unzip jq net-tools git telnet
 
   log "INFO" ${FUNCNAME[0]} "Installing AWS CLI"
   curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
   unzip awscliv2.zip
-  sudo ./aws/install
+  ./aws/install
 
   if [[ ${tool} == "consul" ]]
   then
@@ -335,7 +335,7 @@ EOF
     log "INFO" ${FUNCNAME[0]} "Symlink ${symlink_path} already exists. Will not add again."
   else
     log "INFO" ${FUNCNAME[0]} "Adding symlink to ${dest_path} in ${symlink_path}"
-    sudo ln -s "${dest_path}" "${symlink_path}"
+    ln -s "${dest_path}" "${symlink_path}"
   fi
 }
 
@@ -383,17 +383,33 @@ function run_post_installation_tasks {
   if [[ "${tool}" == "consul" ]]
   then
     log "INFO" ${FUNCNAME[0]} "Setting firewall for ${tool}"
-    sudo iptables -A INPUT -p tcp --dport 8300 -m state --state NEW -j ACCEPT
-    sudo iptables -A INPUT -p tcp --dport 8301 -m state --state NEW -j ACCEPT
-    sudo iptables -A INPUT -p udp --dport 8301 -m state --state NEW -j ACCEPT
-    sudo iptables -A INPUT -p tcp --dport 8302 -m state --state NEW -j ACCEPT
-    sudo iptables -A INPUT -p udp --dport 8302 -m state --state NEW -j ACCEPT
-    sudo iptables -A INPUT -p tcp --dport 8500 -m state --state NEW -j ACCEPT
-    sudo iptables -A INPUT -p tcp --dport 8501 -m state --state NEW -j ACCEPT
-    sudo iptables -A INPUT -p tcp --dport 8502 -m state --state NEW -j ACCEPT
-    sudo iptables -A INPUT -p tcp --dport 8600 -m state --state NEW -j ACCEPT
-    sudo iptables -A INPUT -p tcp --dport 21000:21255 -m state --state NEW -j ACCEPT
-    sudo iptables -A INPUT -p tcp --dport 21500:21755 -m state --state NEW -j ACCEPT
+    log "INFO" ${FUNCNAME[0]} "iptables -A INPUT -p tcp --dport 8300 -m state --state NEW -j ACCEPT"
+    iptables -A INPUT -p tcp --dport 8300 -m state --state NEW -j ACCEPT
+    log "INFO" ${FUNCNAME[0]} "iptables -A INPUT -p tcp --dport 8301 -m state --state NEW -j ACCEPT"
+    iptables -A INPUT -p tcp --dport 8301 -m state --state NEW -j ACCEPT
+    log "INFO" ${FUNCNAME[0]} "iptables -A INPUT -p udp --dport 8301 -m state --state NEW -j ACCEPT"
+    iptables -A INPUT -p udp --dport 8301 -m state --state NEW -j ACCEPT
+    log "INFO" ${FUNCNAME[0]} "iptables -A INPUT -p tcp --dport 8302 -m state --state NEW -j ACCEPT"
+    iptables -A INPUT -p tcp --dport 8302 -m state --state NEW -j ACCEPT
+    log "INFO" ${FUNCNAME[0]} "iptables -A INPUT -p udp --dport 8302 -m state --state NEW -j ACCEPT"
+    iptables -A INPUT -p udp --dport 8302 -m state --state NEW -j ACCEPT
+    log "INFO" ${FUNCNAME[0]} "iptables -A INPUT -p tcp --dport 8500 -m state --state NEW -j ACCEPT"
+    iptables -A INPUT -p tcp --dport 8500 -m state --state NEW -j ACCEPT
+    log "INFO" ${FUNCNAME[0]} "iptables -A INPUT -p tcp --dport 8501 -m state --state NEW -j ACCEPT"
+    iptables -A INPUT -p tcp --dport 8501 -m state --state NEW -j ACCEPT
+    log "INFO" ${FUNCNAME[0]} "iptables -A INPUT -p tcp --dport 8502 -m state --state NEW -j ACCEPT"
+    iptables -A INPUT -p tcp --dport 8502 -m state --state NEW -j ACCEPT
+    log "INFO" ${FUNCNAME[0]} "iptables -A INPUT -p tcp --dport 8600 -m state --state NEW -j ACCEPT"
+    iptables -A INPUT -p tcp --dport 8600 -m state --state NEW -j ACCEPT
+    log "INFO" ${FUNCNAME[0]} "iptables -A INPUT -p tcp --dport 21000:21255 -m state --state NEW -j ACCEPT"
+    iptables -A INPUT -p tcp --dport 21000:21255 -m state --state NEW -j ACCEPT
+    log "INFO" ${FUNCNAME[0]} "iptables -A INPUT -p tcp --dport 21500:21755 -m state --state NEW -j ACCEPT"
+    iptables -A INPUT -p tcp --dport 21500:21755 -m state --state NEW -j ACCEPT
+    if [[ -z $(iptables -L | grep 8500) ]]
+    then
+      log "ERROR" ${FUNCNAME[0]} "iptables commands did not stick. Investigate further"
+      exit 1
+    fi
   elif [[ "${tool}" == "nomad" ]]
   then
     log "INFO" ${FUNCNAME[0]} "Doing nothing yet for ${tool}"
@@ -402,8 +418,9 @@ function run_post_installation_tasks {
     log "INFO" ${FUNCNAME[0]} "Doing nothing yet for ${tool}"
   elif [[ "${tool}" == "vault" ]]
   then
-    sudo iptables -A INPUT -p tcp --dport 8200 -m state --state NEW -j ACCEPT
-    sudo iptables -A INPUT -p tcp --dport 8201 -m state --state NEW -j ACCEPT
+    log "INFO" ${FUNCNAME[0]} "Setting firewall for ${tool}"
+    iptables -A INPUT -p tcp --dport 8200 -m state --state NEW -j ACCEPT
+    iptables -A INPUT -p tcp --dport 8201 -m state --state NEW -j ACCEPT
   fi
 }
 
