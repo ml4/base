@@ -405,11 +405,7 @@ function run_post_installation_tasks {
     iptables -A INPUT -p tcp --dport 21000:21255 -m state --state NEW -j ACCEPT
     log "INFO" ${FUNCNAME[0]} "iptables -A INPUT -p tcp --dport 21500:21755 -m state --state NEW -j ACCEPT"
     iptables -A INPUT -p tcp --dport 21500:21755 -m state --state NEW -j ACCEPT
-    if [[ -z $(iptables -L | grep 8500) ]]
-    then
-      log "ERROR" ${FUNCNAME[0]} "iptables commands did not stick. Investigate further"
-      exit 1
-    fi
+    iptables-save  > /etc/iptables/rules.v4
   elif [[ "${tool}" == "nomad" ]]
   then
     log "INFO" ${FUNCNAME[0]} "Doing nothing yet for ${tool}"
@@ -419,136 +415,13 @@ function run_post_installation_tasks {
   elif [[ "${tool}" == "vault" ]]
   then
     log "INFO" ${FUNCNAME[0]} "Setting firewall for ${tool}"
+    log "INFO" ${FUNCNAME[0]} "iptables -A INPUT -p tcp --dport 8200 -m state --state NEW -j ACCEPT"
     iptables -A INPUT -p tcp --dport 8200 -m state --state NEW -j ACCEPT
+    log "INFO" ${FUNCNAME[0]} "iptables -A INPUT -p tcp --dport 8201 -m state --state NEW -j ACCEPT"
     iptables -A INPUT -p tcp --dport 8201 -m state --state NEW -j ACCEPT
+    iptables-save  > /etc/iptables/rules.v4
   fi
 }
-
-# function install_dnsmasq {
-#   log "INFO" ${FUNCNAME[0]} "Installing Dnsmasq and ResolvConf"
-#   apt-get --quiet --assume-yes install dnsmasq resolvconf
-# }
-
-# function configure_dnsmasq_resolv {
-#   log "INFO" ${FUNCNAME[0]} "Configuring Dnsmasq and ResolvConf"
-#   # Configure dnsmasq
-#   mkdir --parents /etc/dnsmasq.d
-#   cat <<EOF >/tmp/10-consul
-# # Enable forward lookup of the '$consul_domain' domain:
-# server=/consul/127.0.0.1#8600
-
-# listen-address=127.0.0.1
-# bind-interfaces
-# EOF
-#   mv -f /tmp/10-consul /etc/dnsmasq.d
-#   chown --recursive root:root /etc/dnsmasq.d
-
-#   # Setup resolv to use dnsmasq for consul
-#   mkdir --parents /etc/resolvconf/resolv.conf/
-#   echo "127.0.0.1" | tee /etc/resolvconf/resolv.conf/head
-#   echo "127.0.0.53" | tee -a /etc/resolvconf/resolv.conf/head
-#   systemctl enable resolvconf
-#   systemctl start resolvconf
-#   systemctl restart dnsmasq
-# }
-
-# function create_service {
-#   local -r tool="$1"
-#   local -r tmpf="/tmp/${tool}.service"
-#   touch "${tmpf}"
-
-#   cat <EOF >/tmp/${tool}.service
-# [Unit]
-# Description="HashiCorp ${tool}"
-# Documentation=https://www.hashicorp.com/
-# Requires=network-online.target
-# After=network-online.target
-# ConditionFileNotEmpty=/etc/${tool}.d/${tool}.hcl
-
-# [Service]
-# Type=notify
-# User=${tool}
-# Group=${tool}
-# Restart=on-failure
-# EOF
-#   rCode=${?}
-#   if [[ ${rCode} > 0 ]]
-#   then
-#     echo "ERROR: Return status greater than zero when writing file /tmp/${tool}.service"
-#     exit ${rCode}
-#   fi
-
-
-#   if [[ ${tool} == "consul" ]]
-#   then
-#     cat <<EOF >/tmp/${tool}.service
-# ExecStart=/opt/${tool}/bin/${tool} agent -config-dir=/etc/${tool}.d/ -data-dir /opt/${tool}/data
-# ExecReload=/opt/${tool}/bin/${tool} reload
-# KillMode=process
-# TimeoutSec=300s
-# LimitNOFILE=65536
-
-# [Install]
-# WantedBy=multi-user.target
-# EOF
-#   elif [[ ${tool} == "vault" ]]
-#   then
-#     cat <<EOF >/tmp/${tool}.service
-# ProtectSystem=full
-# ProtectHome=read-only
-# PrivateTmp=yes
-# PrivateDevices=yes
-# SecureBits=keep-caps
-# AmbientCapabilities=CAP_IPC_LOCK
-# Capabilities=CAP_IPC_LOCK+ep
-# CapabilityBoundingSet=CAP_SYSLOG CAP_IPC_LOCK
-# NoNewPrivileges=yes
-# ExecStart=/usr/local/bin/vault server -config=/etc/vault.d/vault.hcl
-# ExecReload=/bin/kill --signal HUP \$MAINPID
-# KillMode=process
-# KillSignal=SIGINT
-# RestartSec=5
-# TimeoutStopSec=30
-# StartLimitIntervalSec=60
-# StartLimitBurst=3
-# EOF
-#   fi
-
-#   mkdir --parents /usr/lib/systemd/system
-#   mv -f /tmp/${tool}.service /usr/lib/systemd/system/${tool}.service
-
-#   log "INFO" ${FUNCNAME[0]} "Configuring and enabling ${tool} Service"
-#   chown root:root /usr/lib/systemd/system/${tool}.service
-#   chmod 644 /usr/lib/systemd/system/${tool}.service
-#   systemctl enable ${tool}  # started by the run-${tool}.sh script (which is run by terraform on provision)
-# }
-
-# function install_envoy {
-#   log "INFO" ${FUNCNAME[0]} "Installing dnsmasq resolvconf"
-#   apt-get --quiet --assume-yes install dnsmasq resolvconf
-
-#   log "INFO" ${FUNCNAME[0]} "Updating"
-#   apt-get --quiet --assume-yes update
-
-#   log "INFO" ${FUNCNAME[0]} "Installing apt-transport-https ca-certificates curl gnupg-agent software-properties-common"
-#   apt-get --quiet --assume-yes install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
-
-#   log "INFO" ${FUNCNAME[0]} "Curling getenvoy apt-key"
-#   curl -sL 'https://getenvoy.io/gpg' | apt-key add -
-#   apt-key fingerprint 6FF974DB 2>/dev/null
-
-#   log "INFO" ${FUNCNAME[0]} "add-apt-repository getenvoy-deb"
-#   add-apt-repository \
-#     "deb [arch=amd64] https://dl.bintray.com/tetrate/getenvoy-deb \
-#     $(lsb_release -cs) \
-#     nightly"
-
-#   log "INFO" ${FUNCNAME[0]} "apt-get --quiet --assume-yes update"
-#   apt-get --assume-yes update
-
-#   log "INFO" ${FUNCNAME[0]} "apt-get install -y getenvoy-envoy"
-#   apt-get install -y getenvoy-envoy
-# }
 
 #    #   ##   # #    #
 ##  ##  #  #  # ##   #
