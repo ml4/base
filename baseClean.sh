@@ -43,7 +43,7 @@ function log {
 LASTCOMM=
 CURRCOMM=
 LOGFILE=/root/base.log
-exec > >(stdbuf -i0 -oL -eL awk '{print strftime("%Y-%m-%d %H:%M:%S"), $0 }' | stdbuf -i0 -oL -eL tee "$LOGFILE") 2>&1 
+exec > >(stdbuf -i0 -oL -eL awk '{print strftime("%Y-%m-%d %H:%M:%S"), $0 }' | stdbuf -i0 -oL -eL tee "$LOGFILE") 2>&1
 trap 'LASTCOMM=${CURRCOMM}; CURRCOMM=${BASH_COMMAND}' DEBUG
 trap 'log "ERROR" "Command \"${LASTCOMM}\" exited with exit code $?."' EXIT
 
@@ -59,7 +59,7 @@ function handleExit {
 }
 
 ## convenience function to test return code. Some commands don't work (sed or pipelines) due to quoting reasons so
-## have separate treatments below 
+## have separate treatments below
 #
 function checkOrRun {
   local -r cmd="${1}"
@@ -72,10 +72,17 @@ echo
 banner "BASE CLEAN"
 echo "##################################################################################################"
 
-## Add cloud-init ready for cloud building
+## Add cloud-init ready for cloud building
 #
-checkOrRun "sudo apt-get --quiet --assume-yes install cloud-init"
+checkOrRun "sudo apt-get --quiet --assume-yes install cloud-init iptables-persistent curl unzip jq net-tools git telnet"
 # checkOrRun "sudo cloud-init init"
+
+## Install aws cli v2
+#
+log "INFO" "Installing AWS CLI"
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+./aws/install
 
 # Apt cleanup.
 ## Remove other packages not covered by CIS benchmarking.
