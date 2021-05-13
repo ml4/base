@@ -74,6 +74,7 @@ echo "##########################################################################
 
 ## Add cloud-init ready for cloud building
 #
+checkOrRun "sudo apt-get --quiet --assume-yes install dialog apt-utils"   # these before iptables-persistent
 checkOrRun "sudo apt-get --quiet --assume-yes install cloud-init iptables-persistent curl unzip jq net-tools git telnet"
 # checkOrRun "sudo cloud-init init"
 
