@@ -72,9 +72,12 @@ echo
 banner "BASE CLEAN"
 echo "##################################################################################################"
 
-## Add cloud-init ready for cloud building
+## Configure debconf to avoid iptables-persistent from hanging the build on a tty hope
 #
-checkOrRun "sudo apt-get --quiet --assume-yes install dialog apt-utils"   # these before iptables-persistent
+sudo debconf-set-selections <<EOF
+iptables-persistent iptables-persistent/autosave_v4 boolean true
+iptables-persistent iptables-persistent/autosave_v6 boolean true
+EOF
 checkOrRun "sudo apt-get --quiet --assume-yes install cloud-init iptables-persistent curl unzip jq net-tools git telnet"
 # checkOrRun "sudo cloud-init init"
 
