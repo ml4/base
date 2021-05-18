@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 #
 ## base-init.sh
 ## (c) 2020:05:16::ml4
@@ -43,7 +43,7 @@ function log {
 LASTCOMM=
 CURRCOMM=
 LOGFILE=/root/base.log
-exec > >(stdbuf -i0 -oL -eL awk '{print strftime("%Y-%m-%d %H:%M:%S"), $0 }' | stdbuf -i0 -oL -eL tee "$LOGFILE") 2>&1 
+exec > >(stdbuf -i0 -oL -eL awk '{print strftime("%Y-%m-%d %H:%M:%S"), $0 }' | stdbuf -i0 -oL -eL tee "$LOGFILE") 2>&1
 trap 'LASTCOMM=${CURRCOMM}; CURRCOMM=${BASH_COMMAND}' DEBUG
 trap 'log "ERROR" "Command \"${LASTCOMM}\" exited with exit code $?."' EXIT
 
@@ -59,7 +59,7 @@ function handleExit {
 }
 
 ## convenience function to test return code. Some commands don't work (sed or pipelines) due to quoting reasons so
-## have separate treatments below 
+## have separate treatments below
 #
 function checkOrRun {
   local -r cmd="${1}"
@@ -75,10 +75,10 @@ echo "##########################################################################
 # Disable daily apt unattended updates.
 echo 'APT::Periodic::Enable "0";' | tee -a /etc/apt/apt.conf.d/10periodic
 
-## handle initial updates from origin
+## handle initial updates from origin - full distribution upgrade to include kernel upgrades etc.
 #
 checkOrRun "sudo apt-get --quiet --assume-yes update"
-checkOrRun "sudo apt-get --quiet --assume-yes upgrade"
+checkOrRun "sudo apt-get --quiet --assume-yes dist-upgrade"
 
 ## deposit phoenix file which can be edited by phoenix build to enable contextual relevance in the auditd
 #
