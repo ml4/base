@@ -2,12 +2,10 @@
 #
 ## installHC.sh
 ## 2021-01-06 ml4
-## Automate the secure downloading of a tool from releases.hashicorp.com to the current machine
+## Automate the secure downloading of a hashicorp tool from ubuntu pkg libraries to the current machine
 ## Ubuntu/Debian only, but capable to download Consul, Vault and Nomad.
 ## Bits ripped off similar work by @methridge together with my desktop downloader.
 ## Needs access to root to be effective.
-#
-## does not verify GPG), this script is currently for consul, vault and nomad only.
 #
 #############################################################################################################################
 
