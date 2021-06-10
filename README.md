@@ -5,7 +5,7 @@
 ![CIS Compliance](https://img.shields.io/badge/CIS_Compliance-100%25-green.svg?style=for-the-badge)
 ![Packer version](https://img.shields.io/badge/packer-1.7.2-02A8EF.svg?style=for-the-badge)
 ![Vagrant version](https://img.shields.io/badge/vagrant-2.2.16-1868F2.svg?style=for-the-badge)
-![Terraform version](https://img.shields.io/badge/terraform-0.15.3-7B42BC.svg?style=for-the-badge)
+![Terraform version](https://img.shields.io/badge/terraform-1.0.0-7B42BC.svg?style=for-the-badge)
 ![VirtualBox version](https://img.shields.io/badge/virtualbox-6.1.18-red.svg?style=for-the-badge)
 ![Ubuntu version](https://img.shields.io/badge/ubuntu-18.05LTS-blue.svg?style=for-the-badge)
 ![Written with](https://img.shields.io/badge/written_with-macOS-333.svg?style=for-the-badge)
