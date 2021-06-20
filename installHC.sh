@@ -156,14 +156,6 @@ function main {
   fi
   local_only=${3:-"NO"}
 
-  ## write descriptor
-  #
-  date=$(date '+%Y-%m-%d %H:%M')
-  echo "## phoenix build descriptor" | tee /etc/phoenix
-  echo "#" | tee -a /etc/phoenix
-  echo "tool:  ${tool}" | tee -a /etc/phoenix
-  echo "build: ${date}" | tee -a /etc/phoenix
-
   ## if bastion machine_type, exit.  This should be the only non-HashiCorp machine type
   #
   if [[ ${tool} == "bastion" ]]
