@@ -3,7 +3,7 @@
 ![CIS version](https://img.shields.io/badge/CIS_benchmark-2.0.1-003b5b.svg?style=for-the-badge)
 ![CIS CAT](https://img.shields.io/badge/CIS_CAT_Lite-4.0.21-003b5b.svg?style=for-the-badge)
 ![CIS Compliance](https://img.shields.io/badge/CIS_Compliance-100%25-green.svg?style=for-the-badge)
-![Packer version](https://img.shields.io/badge/packer-1.7.2-02A8EF.svg?style=for-the-badge)
+![Packer version](https://img.shields.io/badge/packer-1.7.3-02A8EF.svg?style=for-the-badge)
 ![Vagrant version](https://img.shields.io/badge/vagrant-2.2.16-1868F2.svg?style=for-the-badge)
 ![Terraform version](https://img.shields.io/badge/terraform-1.0.0-7B42BC.svg?style=for-the-badge)
 ![VirtualBox version](https://img.shields.io/badge/virtualbox-6.1.18-red.svg?style=for-the-badge)
