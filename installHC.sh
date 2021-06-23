@@ -104,7 +104,6 @@ function install_tool {
     iptables -A INPUT -p tcp --dport 21000:21255 -m state --state NEW -j ACCEPT
     log "INFO" ${FUNCNAME[0]} "iptables -A INPUT -p tcp --dport 21500:21755 -m state --state NEW -j ACCEPT"
     iptables -A INPUT -p tcp --dport 21500:21755 -m state --state NEW -j ACCEPT
-    iptables-save  > /etc/iptables/rules.v4
   elif [[ "${tool}" == "nomad" ]]
   then
     log "INFO" ${FUNCNAME[0]} "apt-get --quiet --assume-yes install vault"
@@ -135,8 +134,8 @@ function install_tool {
     iptables -A INPUT -p tcp --dport 8200 -m state --state NEW -j ACCEPT
     log "INFO" ${FUNCNAME[0]} "iptables -A INPUT -p tcp --dport 8201 -m state --state NEW -j ACCEPT"
     iptables -A INPUT -p tcp --dport 8201 -m state --state NEW -j ACCEPT
-    iptables-save  > /etc/iptables/rules.v4
   fi
+  iptables-save  > /etc/iptables/rules.v4
 }
 
 #    #   ##   # #    #
