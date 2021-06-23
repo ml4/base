@@ -119,6 +119,12 @@ function install_tool {
 
     log "INFO" ${FUNCNAME[0]} "apt-get --quiet --assume-yes install consul"
     apt-get --quiet --assume-yes install consul     # consul agent
+
+    log "INFO" ${FUNCNAME[0]} "Setting firewall for ${tool}"
+    log "INFO" ${FUNCNAME[0]} "iptables -A INPUT -p tcp --dport 8800 -m state --state NEW -j ACCEPT"
+    iptables -A INPUT -p tcp --dport 8800 -m state --state NEW -j ACCEPT
+    log "INFO" ${FUNCNAME[0]} "iptables -A INPUT -p tcp --dport 443 -m state --state NEW -j ACCEPT"
+    iptables -A INPUT -p tcp --dport 443 -m state --state NEW -j ACCEPT
   elif [[ "${tool}" == "vault" ]]
   then
     log "INFO" ${FUNCNAME[0]} "apt-get --quiet --assume-yes install consul"
