@@ -130,6 +130,10 @@ checkOrRun "sudo chmod 744 /usr/local/bin/base-boot.sh"
 checkOrRun "sudo systemctl enable base-boot"
 checkOrRun "sudo systemctl start base-boot"
 
+## user setup
+#
+echo "alias sb='sudo bash'" >> /home/ubuntu/.bashrc
+
 echo "##################################################################################################"
 echo
 banner "INIT DONE"
