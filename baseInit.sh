@@ -36,7 +36,7 @@ function log {
 
 
 ## Process stdout/err handling
-## https://intoli.com/blog/exit-on-errors-in-bash-scripts/
+## https://intoli.com/blog/exit-on-errors-in-bash-scripts/
 ## https://stackoverflow.com/questions/3684212/using-strftime-function-in-mawk
 ## https://stackoverflow.com/a/25548995/259453
 #
@@ -47,7 +47,7 @@ exec > >(stdbuf -i0 -oL -eL awk '{print strftime("%Y-%m-%d %H:%M:%S"), $0 }' | s
 trap 'LASTCOMM=${CURRCOMM}; CURRCOMM=${BASH_COMMAND}' DEBUG
 trap 'log "ERROR" "Command \"${LASTCOMM}\" exited with exit code $?."' EXIT
 
-## convenience function to reduce lines of code while handling exit codes
+## convenience function to reduce lines of code while handling exit codes
 #
 function handleExit {
   local -r cmdOrMessage="${1}"
